@@ -15,7 +15,8 @@ spring:
     locations: classpath:db/migration
 
 jwt:
-  secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+  # In local development, reads JWT_SECRET env var if set, otherwise defaults to local-dev-only secret
+  secret: ${JWT_SECRET:local-development-only-insecure-secret-key-do-not-use-in-production-halt-and-charge-platform-ev}
   expiration-ms: 86400000
 
 cors:
