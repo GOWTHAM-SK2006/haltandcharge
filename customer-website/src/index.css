@@ -1,51 +1,212 @@
+@import 'leaflet/dist/leaflet.css';
+
 :root {
-  --bg-primary: #07090e;
-  --bg-secondary: #0d121c;
-  --bg-card: #131b29;
-  --bg-hover: #1b263b;
-  --accent-neon: #00FF88;
-  --accent-neon-glow: rgba(0, 255, 136, 0.28);
-  --accent-emerald: #10b981;
-  --accent-cyan: #06b6d4;
-  --accent-amber: #f59e0b;
-  --accent-red: #ef4444;
-  --text-primary: #ffffff;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  --border-color: #202b3d;
-  --border-subtle: #141d2b;
+  /* Brand Green + White Theme */
+  --hc-green-primary: #059669;        /* Emerald 600 - Main Brand Green */
+  --hc-green-dark: #047857;           /* Emerald 700 - Hover / Active */
+  --hc-green-darker: #064e3b;         /* Emerald 900 */
+  --hc-green-light: #10b981;          /* Emerald 500 */
+  --hc-green-subtle: #ecfdf5;         /* Emerald 50 - Background tints */
+  --hc-green-border: #a7f3d0;         /* Emerald 200 */
+  --hc-green-glow: rgba(5, 150, 105, 0.25);
+
+  /* Clean White & Crisp Neutrals */
+  --hc-bg-page: #f8fafc;              /* Slate 50 */
+  --hc-surface: #ffffff;              /* Pure White */
+  --hc-surface-subtle: #f1f5f9;       /* Slate 100 */
+  --hc-surface-hover: #f8fafc;
+  --hc-border: #e2e8f0;               /* Slate 200 */
+  --hc-border-dark: #cbd5e1;          /* Slate 300 */
+
+  /* High Contrast Typography */
+  --hc-text-primary: #0f172a;         /* Slate 900 */
+  --hc-text-secondary: #334155;       /* Slate 700 */
+  --hc-text-muted: #64748b;           /* Slate 500 */
+  --hc-text-light: #94a3b8;           /* Slate 400 */
+
+  /* Status Colors */
+  --hc-status-available: #10b981;
+  --hc-status-charging: #f59e0b;
+  --hc-status-offline: #94a3b8;
+  --hc-status-error: #ef4444;
+
+  /* Shadows */
+  --hc-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --hc-shadow-md: 0 4px 12px -2px rgba(0, 0, 0, 0.08), 0 2px 6px -1px rgba(0, 0, 0, 0.04);
+  --hc-shadow-lg: 0 10px 25px -3px rgba(0, 0, 0, 0.12), 0 4px 10px -2px rgba(0, 0, 0, 0.05);
+  --hc-shadow-float: 0 8px 30px rgba(15, 23, 42, 0.12);
+  --hc-shadow-fab: 0 8px 24px rgba(5, 150, 105, 0.4);
 }
 
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
-  min-height: 100vh;
-  overflow-x: hidden;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--hc-bg-page);
+  color: var(--hc-text-primary);
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  user-select: none;
 }
 
-code, pre {
-  font-family: 'JetBrains Mono', monospace;
-}
-
+/* Custom Scrollbars for drawers and lists */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--bg-primary);
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--border-color);
-  border-radius: 3px;
+  background: var(--hc-border);
+  border-radius: 999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
+  background: var(--hc-border-dark);
 }
 
+/* Leaflet Overrides */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  background-color: #e5e7eb !important;
+  font-family: inherit !important;
+}
+
+.leaflet-control-zoom {
+  display: none !important; /* Replaced by custom floating controls */
+}
+
+.leaflet-control-attribution {
+  font-size: 10px !important;
+  background: rgba(255, 255, 255, 0.75) !important;
+  backdrop-filter: blur(4px) !important;
+  color: #64748b !important;
+  border-radius: 4px !important;
+  margin: 0 8px 8px 0 !important;
+}
+
+/* Custom Pin Marker */
+.hc-station-pin {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.hc-station-pin:hover {
+  transform: scale(1.15) translateY(-4px);
+  z-index: 9999 !important;
+}
+
+.hc-pin-bubble {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--hc-green-primary);
+  border: 2.5px solid #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.45);
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.hc-pin-bubble.occupied {
+  background: #f59e0b;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.45);
+}
+
+.hc-pin-bubble.offline {
+  background: #64748b;
+  box-shadow: 0 4px 14px rgba(100, 116, 139, 0.45);
+}
+
+.hc-pin-bubble.selected {
+  transform: scale(1.15);
+  border-color: #ecfdf5;
+  box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.35), 0 8px 20px rgba(5, 150, 105, 0.5);
+}
+
+.hc-pin-arrow {
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 8px solid var(--hc-green-primary);
+  margin-top: -2px;
+}
+.hc-pin-bubble.occupied + .hc-pin-arrow {
+  border-top-color: #f59e0b;
+}
+.hc-pin-bubble.offline + .hc-pin-arrow {
+  border-top-color: #64748b;
+}
+
+/* User Location Pin */
+.hc-user-pin {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #2563eb;
+  border: 3px solid #ffffff;
+  box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.3), 0 4px 10px rgba(0,0,0,0.25);
+  animation: pulse-ring 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+}
+
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.5), 0 4px 10px rgba(0,0,0,0.25);
+  }
+  70% {
+    box-shadow: 0 0 0 14px rgba(37, 99, 235, 0), 0 4px 10px rgba(0,0,0,0.25);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0), 0 4px 10px rgba(0,0,0,0.25);
+  }
+}
+
+/* Animation Utilities */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scannerSweep {
+  0% { top: 10%; opacity: 0.8; }
+  50% { top: 90%; opacity: 1; }
+  100% { top: 10%; opacity: 0.8; }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+.scanner-laser {
+  animation: scannerSweep 2.2s infinite ease-in-out;
+}
