@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
 
 export async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const token = localStorage.getItem('hc_customer_token');
@@ -31,4 +31,3 @@ export async function apiRequest<T>(endpoint: string, options: RequestInit = {})
 
   return response.json();
 }
-

@@ -1,21 +1,40 @@
-# Multi-stage build for Halt & Charge Spring Boot Backend (Java 21)
-FROM eclipse-temurin:21-jdk-alpine AS build
-WORKDIR /app
+# Multi-stage build for Halt & Charge Full-Stack Platform
+# Stage 1: Build Customer Website
+FROM node:20-alpine AS customer-build
+WORKDIR /app/customer-website
+COPY customer-website/package*.json ./
+RUN npm install
+COPY customer-website/ ./
+RUN npm run build
 
-# Copy maven wrapper & pom
+# Stage 2: Build Admin Dashboard
+FROM node:20-alpine AS admin-build
+WORKDIR /app/admin-dashboard
+COPY admin-dashboard/package*.json ./
+RUN npm install
+COPY admin-dashboard/ ./
+RUN npm run build
+
+# Stage 3: Build Spring Boot Backend with embedded Web Frontends
+FROM eclipse-temurin:21-jdk-alpine AS backend-build
+WORKDIR /app/backend
+
 COPY backend/.mvn/ .mvn/
 COPY backend/mvnw backend/pom.xml ./
 RUN chmod +x ./mvnw
 RUN ./mvnw dependency:go-offline -B
 
-# Copy backend source code and build jar
 COPY backend/src src/
+# Copy built frontend distributions directly into Spring Boot static resources
+COPY --from=customer-build /app/customer-website/dist/ src/main/resources/static/
+COPY --from=admin-build /app/admin-dashboard/dist/ src/main/resources/static/admin/
+
 RUN ./mvnw clean package -DskipTests
 
-# Runtime stage
+# Stage 4: Production Runtime Container
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
-COPY --from=build /app/target/*.jar app.jar
+COPY --from=backend-build /app/backend/target/*.jar app.jar
 ENV PORT=8080
 ENV SPRING_PROFILES_ACTIVE=prod
 EXPOSE 8080
