@@ -253,3 +253,4 @@ export const ActiveSessionModal: React.FC<ActiveSessionModalProps> = ({
     </div>
   );
 };
+

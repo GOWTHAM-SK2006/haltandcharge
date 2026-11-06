@@ -326,3 +326,4 @@ export const ScanChargeModal: React.FC<ScanChargeModalProps> = ({
     </div>
   );
 };
+

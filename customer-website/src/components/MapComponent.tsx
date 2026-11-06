@@ -24,7 +24,7 @@ export const MapComponent: React.FC<MapComponentProps> = ({
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersRef = useRef<{ [key: number]: L.Marker }>({});
   const userMarkerRef = useRef<L.Marker | null>(null);
-  const [mapLayer, setMapLayer] = useState<'positron' | 'osm'>('positron');
+  const [mapLayer, setMapLayer] = useState<'osm' | 'hot'>('osm');
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Initialize Map
@@ -40,13 +40,13 @@ export const MapComponent: React.FC<MapComponentProps> = ({
       zoomControl: false,
     });
 
-    const tileUrl = mapLayer === 'positron'
-      ? 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
+    const tileUrl = mapLayer === 'hot'
+      ? 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png'
       : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 
     const tiles = L.tileLayer(tileUrl, {
       maxZoom: 19,
-      attribution: '&copy; <a href="https://openstreetmap.org">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>'
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
 
     (map as any)._customTileLayer = tiles;
@@ -77,13 +77,13 @@ export const MapComponent: React.FC<MapComponentProps> = ({
     if ((map as any)._customTileLayer) {
       map.removeLayer((map as any)._customTileLayer);
     }
-    const tileUrl = mapLayer === 'positron'
-      ? 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
+    const tileUrl = mapLayer === 'hot'
+      ? 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png'
       : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 
     const tiles = L.tileLayer(tileUrl, {
       maxZoom: 19,
-      attribution: '&copy; OpenStreetMap &copy; CARTO'
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
     (map as any)._customTileLayer = tiles;
   }, [mapLayer]);
@@ -201,8 +201,8 @@ export const MapComponent: React.FC<MapComponentProps> = ({
       }}>
         {/* Layer Toggle */}
         <button
-          onClick={() => setMapLayer(prev => prev === 'positron' ? 'osm' : 'positron')}
-          title="Toggle Map Style"
+          onClick={() => setMapLayer(prev => prev === 'osm' ? 'hot' : 'osm')}
+          title="Toggle OpenStreetMap Style"
           style={{
             width: '44px',
             height: '44px',
@@ -301,3 +301,4 @@ export const MapComponent: React.FC<MapComponentProps> = ({
     </div>
   );
 };
+

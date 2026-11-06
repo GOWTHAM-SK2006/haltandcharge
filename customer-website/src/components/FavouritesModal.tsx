@@ -217,3 +217,4 @@ export const FavouritesModal: React.FC<FavouritesModalProps> = ({
     </div>
   );
 };
+
