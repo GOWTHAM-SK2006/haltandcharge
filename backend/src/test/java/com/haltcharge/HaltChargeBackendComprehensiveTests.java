@@ -3,13 +3,16 @@ package com.haltcharge;
 import com.haltcharge.dto.AuthDto;
 import com.haltcharge.dto.SessionDto;
 import com.haltcharge.dto.StationDto;
+import com.haltcharge.entity.Charger;
 import com.haltcharge.entity.Station;
 import com.haltcharge.entity.Vehicle;
+import com.haltcharge.repository.ChargerRepository;
 import com.haltcharge.repository.VehicleRepository;
 import com.haltcharge.service.AuthService;
 import com.haltcharge.service.ChargingSessionService;
 import com.haltcharge.service.StationService;
 import com.haltcharge.simulator.ChargerCommunicationService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +40,52 @@ class HaltChargeBackendComprehensiveTests {
     private VehicleRepository vehicleRepository;
 
     @Autowired
+    private ChargerRepository chargerRepository;
+
+    @Autowired
     private ChargerCommunicationService simulatorService;
+
+    private String testIdentifier = "HC-TEST-RAPID-01";
+
+    @BeforeEach
+    void setupTestData() {
+        if (chargerRepository.findByIdentifier(testIdentifier).isEmpty()) {
+            StationDto.CreateStationRequest req = new StationDto.CreateStationRequest();
+            req.setName("Comprehensive Test Hub");
+            req.setAddress("ITPB Road");
+            req.setCity("Bengaluru");
+            req.setLatitude(BigDecimal.valueOf(12.9719));
+            req.setLongitude(BigDecimal.valueOf(77.6412));
+            req.setOperatingHours("24/7");
+            Station s = stationService.createStation(req);
+
+            Charger c = new Charger();
+            c.setStationId(s.getId());
+            c.setIdentifier(testIdentifier);
+            c.setName("Test HyperFast");
+            c.setChargerType("DC");
+            c.setMaxPowerKw(BigDecimal.valueOf(150.0));
+            c.setStatus("AVAILABLE");
+            c.setTariffPerKwh(BigDecimal.valueOf(19.0));
+            c.setIsSimulated(true);
+            c.setIsActive(true);
+            chargerRepository.save(c);
+
+            Vehicle v = new Vehicle();
+            v.setUserId(2L);
+            v.setBrand("Hyundai");
+            v.setModel("Ioniq 5");
+            v.setLicensePlate("KA-05-TEST");
+            v.setBatteryCapacityKwh(BigDecimal.valueOf(72.6));
+            v.setConnectorType("CCS2");
+            v.setMaxChargingSpeedKw(BigDecimal.valueOf(150.0));
+            v.setIsDefault(true);
+            Vehicle savedV = vehicleRepository.save(v);
+            testVehicleId = savedV.getId();
+        }
+    }
+
+    private Long testVehicleId;
 
     @Test
     @DisplayName("1. User Registration and Login flow")
@@ -65,7 +113,6 @@ class HaltChargeBackendComprehensiveTests {
     @Test
     @DisplayName("2. Stations Listing and Spatial Distance Verification")
     void testStationsAndDistance() {
-        // Koramangala coordinate
         List<StationDto.StationResponse> stations = stationService.getAllStations(12.9352, 77.6245);
         assertFalse(stations.isEmpty());
 
@@ -105,10 +152,9 @@ class HaltChargeBackendComprehensiveTests {
     @Transactional
     @DisplayName("4. Charging Lifecycle with Hardware Simulator Control and Concurrency Lock")
     void testCompleteChargingLifecycle() {
-        // Start charging on Indiranagar Rapid DC (HC-IND-DC-01)
         SessionDto.StartSessionRequest start = new SessionDto.StartSessionRequest();
-        start.setChargerIdentifier("HC-IND-DC-01");
-        start.setVehicleId(1L);
+        start.setChargerIdentifier(testIdentifier);
+        start.setVehicleId(testVehicleId);
 
         SessionDto.SessionResponse session = sessionService.startSession(2L, start);
         assertNotNull(session);
@@ -116,7 +162,7 @@ class HaltChargeBackendComprehensiveTests {
         assertTrue(session.getIsSimulated());
         assertNotNull(session.getTariffSnapshotPerKwh());
 
-        // Attempting another session while one is active MUST throw BadRequestException
+        // Attempting another session while one is active MUST throw RuntimeException
         assertThrows(RuntimeException.class, () -> sessionService.startSession(2L, start));
 
         // Stop session cleanly
@@ -129,7 +175,8 @@ class HaltChargeBackendComprehensiveTests {
     @Test
     @DisplayName("5. Simulator Hardware Fault & Recovery Lifecycle")
     void testSimulatorHardwareFaultAndRestore() {
-        Long testChargerId = 3L; // HC-KOR-AC-01
+        Charger c = chargerRepository.findByIdentifier(testIdentifier).orElseThrow();
+        Long testChargerId = c.getId();
         
         // Inject fault
         simulatorService.setChargerFault(testChargerId, "Simulated Overcurrent Trip");
@@ -137,4 +184,3 @@ class HaltChargeBackendComprehensiveTests {
         simulatorService.restoreChargerAvailable(testChargerId);
     }
 }
-

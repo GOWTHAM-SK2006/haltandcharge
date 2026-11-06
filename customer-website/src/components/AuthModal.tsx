@@ -3,7 +3,7 @@ import { X, Lock, Mail, User, Phone, ShieldCheck, ArrowRight } from 'lucide-reac
 import { apiRequest } from '../api';
 
 interface AuthModalProps {
-  onSuccess: (token: string) => void;
+  onSuccess: (token: string, role?: string) => void;
   onClose: () => void;
 }
 
@@ -12,10 +12,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   onClose
 }) => {
   const [mode, setMode] = useState<'login' | 'register'>('login');
-  const [email, setEmail] = useState('customer@haltcharge.com');
+  const [email, setEmail] = useState('admin@haltcharge.com');
   const [password, setPassword] = useState('Password@123');
-  const [fullName, setFullName] = useState('Arjun Sharma');
-  const [phone, setPhone] = useState('+91 9876543211');
+  const [fullName, setFullName] = useState('Halt & Charge Admin');
+  const [phone, setPhone] = useState('+91 9876543210');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -25,13 +25,22 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setError('');
     try {
       if (mode === 'login') {
-        const res = await apiRequest<{ token: string }>('/api/auth/login', {
+        const res = await apiRequest<{ token: string; role?: string; email?: string }>('/api/auth/login', {
           method: 'POST',
           body: JSON.stringify({ email, password })
         });
-        onSuccess(res.token);
+
+        // If user is Admin, save token and immediately redirect to Admin Dashboard
+        if (res.role === 'ROLE_ADMIN' || res.email === 'admin@haltcharge.com') {
+          localStorage.setItem('hc_admin_token', res.token);
+          localStorage.setItem('hc_customer_token', res.token);
+          window.location.href = '/admin/';
+          return;
+        }
+
+        onSuccess(res.token, res.role);
       } else {
-        const res = await apiRequest<{ token: string }>('/api/auth/register', {
+        const res = await apiRequest<{ token: string; role?: string }>('/api/auth/register', {
           method: 'POST',
           body: JSON.stringify({
             email,
@@ -40,7 +49,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             phoneNumber: phone
           })
         });
-        onSuccess(res.token);
+        onSuccess(res.token, res.role);
       }
       onClose();
     } catch (err: any) {
@@ -50,7 +59,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
   };
 
-  const handleFillDemo = () => {
+  const handleFillAdmin = () => {
+    setMode('login');
+    setEmail('admin@haltcharge.com');
+    setPassword('Password@123');
+  };
+
+  const handleFillCustomer = () => {
     setMode('login');
     setEmail('customer@haltcharge.com');
     setPassword('Password@123');
@@ -85,10 +100,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         <div style={{ padding: '20px', borderBottom: '1px solid var(--hc-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
             <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--hc-text-primary)' }}>
-              {mode === 'login' ? 'Welcome to Halt & Charge' : 'Create Customer Account'}
+              {mode === 'login' ? 'Sign In to Halt & Charge' : 'Create Customer Account'}
             </h3>
             <p style={{ fontSize: '12px', color: 'var(--hc-text-muted)', marginTop: '2px' }}>
-              Access fast charging, digital wallet, and garage
+              Enter your credentials to access your dashboard
             </p>
           </div>
 
@@ -278,26 +293,42 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <ArrowRight size={16} />
           </button>
 
-          {/* Quick Demo Fill Helper */}
-          <button
-            type="button"
-            onClick={handleFillDemo}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'var(--hc-green-primary)',
-              fontSize: '12px',
-              fontWeight: 700,
-              cursor: 'pointer',
-              textAlign: 'center',
-              textDecoration: 'underline'
-            }}
-          >
-            Click here to fill Demo Customer credentials
-          </button>
+          {/* Quick Demo Fill Buttons */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginTop: '4px' }}>
+            <button
+              type="button"
+              onClick={handleFillAdmin}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'var(--hc-green-primary)',
+                fontSize: '12px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                textDecoration: 'underline'
+              }}
+            >
+              Fill Admin Login
+            </button>
+            <span style={{ color: 'var(--hc-border-dark)' }}>•</span>
+            <button
+              type="button"
+              onClick={handleFillCustomer}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'var(--hc-text-secondary)',
+                fontSize: '12px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                textDecoration: 'underline'
+              }}
+            >
+              Fill Customer Login
+            </button>
+          </div>
         </form>
       </div>
     </div>
   );
 };
-

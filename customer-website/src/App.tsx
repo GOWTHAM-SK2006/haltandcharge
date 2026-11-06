@@ -186,7 +186,13 @@ export default function App() {
   };
 
   // Auth Success
-  const handleAuthSuccess = (newToken: string) => {
+  const handleAuthSuccess = (newToken: string, role?: string) => {
+    if (role === 'ROLE_ADMIN') {
+      localStorage.setItem('hc_admin_token', newToken);
+      localStorage.setItem('hc_customer_token', newToken);
+      window.location.href = '/admin/';
+      return;
+    }
     localStorage.setItem('hc_customer_token', newToken);
     setToken(newToken);
     fetchData();
