@@ -38,3 +38,4 @@ class JwtProviderValidationTest {
         assertEquals("ROLE_CUSTOMER", provider.getRoleFromToken(token));
     }
 }
+
