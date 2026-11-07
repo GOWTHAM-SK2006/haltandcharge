@@ -241,7 +241,8 @@ export default function App() {
     <div style={{
       position: 'relative',
       width: '100vw',
-      height: '100vh',
+      height: '100dvh',
+      minHeight: '100vh',
       overflow: 'hidden',
       backgroundColor: 'var(--hc-bg-page)'
     }}>

@@ -189,41 +189,17 @@ export const MapComponent: React.FC<MapComponentProps> = ({
       {/* Map DOM Element */}
       <div ref={mapContainerRef} style={{ width: '100%', height: '100%' }} />
 
-      {/* Floating Map Controls - Bottom Left (Layers & Refresh) */}
+      {/* Floating Map Controls - Bottom Left (Layers & Refresh, Fixed on Viewport Above Bottom Nav) */}
       <div style={{
-        position: 'absolute',
-        bottom: '108px',
+        position: 'fixed',
+        bottom: '98px',
         left: '16px',
-        zIndex: 900,
+        zIndex: 35,
         pointerEvents: 'auto',
         display: 'flex',
-        flexDirection: 'column',
+        flexDirection: 'column-reverse',
         gap: '10px'
       }}>
-        {/* Refresh Stations */}
-        <button
-          onClick={handleRefreshClick}
-          title="Refresh Stations"
-          style={{
-            width: '46px',
-            height: '46px',
-            borderRadius: '50%',
-            background: '#ffffff',
-            border: '1px solid #e2e8f0',
-            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.15)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#334155',
-            cursor: 'pointer',
-            transition: 'transform 0.15s ease, background-color 0.15s ease'
-          }}
-          onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#f8fafc')}
-          onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#ffffff')}
-        >
-          <RefreshCw size={20} style={{ animation: isRefreshing ? 'spin 0.8s linear infinite' : 'none' }} />
-        </button>
-
         {/* Toggle Layers */}
         <button
           onClick={() => setMapLayer(prev => prev === 'osm' ? 'hot' : 'osm')}
@@ -247,14 +223,38 @@ export const MapComponent: React.FC<MapComponentProps> = ({
         >
           <Layers size={20} strokeWidth={2} />
         </button>
+
+        {/* Refresh Stations */}
+        <button
+          onClick={handleRefreshClick}
+          title="Refresh Stations"
+          style={{
+            width: '46px',
+            height: '46px',
+            borderRadius: '50%',
+            background: '#ffffff',
+            border: '1px solid #e2e8f0',
+            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.15)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#334155',
+            cursor: 'pointer',
+            transition: 'transform 0.15s ease, background-color 0.15s ease'
+          }}
+          onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#f8fafc')}
+          onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#ffffff')}
+        >
+          <RefreshCw size={20} style={{ animation: isRefreshing ? 'spin 0.8s linear infinite' : 'none' }} />
+        </button>
       </div>
 
-      {/* Floating Map Controls - Bottom Right (Current Location) */}
+      {/* Floating Map Controls - Bottom Right (Current Location, Fixed on Viewport Above Bottom Nav) */}
       <div style={{
-        position: 'absolute',
-        bottom: '108px',
+        position: 'fixed',
+        bottom: '98px',
         right: '16px',
-        zIndex: 900,
+        zIndex: 35,
         pointerEvents: 'auto'
       }}>
         <button
