@@ -18,17 +18,20 @@ import {
   Mail,
   Send,
   Star,
-  User
+  User,
+  Heart
 } from 'lucide-react';
 import { UserProfile, ChargingSession } from '../types';
 
 interface MoreModalProps {
   profile: UserProfile | null;
   walletBalance: number;
+  favouritesCount?: number;
   sessionHistory: ChargingSession[];
   activeSession: ChargingSession | null;
   onOpenActiveSession: () => void;
   onOpenWallet: () => void;
+  onOpenFavourites: () => void;
   onOpenAuth: () => void;
   onLogout: () => void;
   onClose: () => void;
@@ -37,10 +40,12 @@ interface MoreModalProps {
 export const MoreModal: React.FC<MoreModalProps> = ({
   profile,
   walletBalance,
+  favouritesCount,
   sessionHistory,
   activeSession,
   onOpenActiveSession,
   onOpenWallet,
+  onOpenFavourites,
   onOpenAuth,
   onLogout,
   onClose
@@ -239,20 +244,20 @@ export const MoreModal: React.FC<MoreModalProps> = ({
 
         {/* 2. Menu List Items */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          {/* Wallet - Visible ONLY when signed in */}
+          {/* Favourites - Swapped from bottom navigation */}
           {profile && (
             <button
-              onClick={onOpenWallet}
+              onClick={onOpenFavourites}
               style={menuItemStyle}
               onMouseEnter={handleHover}
               onMouseLeave={handleUnhover}
             >
               <div style={iconContainerStyle}>
-                <Wallet size={20} color="#374151" strokeWidth={2.2} />
+                <Heart size={20} color="#374151" strokeWidth={2.2} />
               </div>
-              <span style={menuItemTextStyle}>Wallet</span>
+              <span style={menuItemTextStyle}>Favourites</span>
               <span style={{ marginLeft: 'auto', fontSize: '13px', fontWeight: 800, color: 'var(--hc-green-primary)' }}>
-                ₹{Number(walletBalance || 0).toFixed(2)}
+                {favouritesCount ?? 0}
               </span>
             </button>
           )}

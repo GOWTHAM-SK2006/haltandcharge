@@ -33,6 +33,7 @@ export default function App() {
   const [showSearch, setShowSearch] = useState(false);
   const [showTripPlanner, setShowTripPlanner] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showFavouritesModal, setShowFavouritesModal] = useState(false);
   const [showWalletTopUp, setShowWalletTopUp] = useState(false);
   const [showActiveSessionModal, setShowActiveSessionModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -127,11 +128,15 @@ export default function App() {
   const handleTabChange = (tab: NavTab) => {
     setActiveNavTab(tab);
     setShowProfileModal(false);
+    setShowFavouritesModal(false);
     if (tab === 'map') {
       setSelectedStation(null);
       setShowTripPlanner(false);
+      setShowWalletTopUp(false);
     } else if (tab === 'trip') {
       setShowTripPlanner(true);
+    } else if (tab === 'wallet') {
+      setShowWalletTopUp(true);
     }
   };
 
@@ -337,16 +342,17 @@ export default function App() {
         />
       )}
 
-      {/* 9. Favourites Modal */}
-      {activeNavTab === 'favourites' && (
+      {/* 9. Favourites Modal (Opened from Profile -> Favourites) */}
+      {showFavouritesModal && (
         <FavouritesModal
           favourites={favourites}
           onSelectStation={st => {
             setSelectedStation(st);
+            setShowFavouritesModal(false);
             setActiveNavTab('map');
           }}
           onRemoveFavourite={handleToggleFavourite}
-          onClose={() => setActiveNavTab('map')}
+          onClose={() => setShowFavouritesModal(false)}
           isAuthenticated={!!token}
           onOpenAuth={() => setShowAuthModal(true)}
         />
@@ -357,10 +363,18 @@ export default function App() {
         <MoreModal
           profile={profile}
           walletBalance={totalWalletBalance}
+          favouritesCount={favourites.length}
           sessionHistory={sessionHistory}
           activeSession={activeSession}
           onOpenActiveSession={() => setShowActiveSessionModal(true)}
-          onOpenWallet={() => setShowWalletTopUp(true)}
+          onOpenWallet={() => {
+            setShowProfileModal(false);
+            setShowWalletTopUp(true);
+          }}
+          onOpenFavourites={() => {
+            setShowProfileModal(false);
+            setShowFavouritesModal(true);
+          }}
           onOpenAuth={() => setShowAuthModal(true)}
           onLogout={handleLogout}
           onClose={() => setShowProfileModal(false)}
@@ -384,12 +398,15 @@ export default function App() {
         />
       )}
 
-      {/* 13. Wallet Top Up Modal */}
-      {showWalletTopUp && (
+      {/* 13. Wallet Modal (Opened from Bottom Navigation Bar or Profile) */}
+      {(showWalletTopUp || activeNavTab === 'wallet') && (
         <WalletTopUpModal
           currentBalance={totalWalletBalance}
           onTopUp={handleWalletTopUp}
-          onClose={() => setShowWalletTopUp(false)}
+          onClose={() => {
+            setShowWalletTopUp(false);
+            setActiveNavTab('map');
+          }}
         />
       )}
     </div>

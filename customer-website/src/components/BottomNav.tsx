@@ -1,7 +1,7 @@
 import React from 'react';
-import { Map, Car, Heart, Route, Zap } from 'lucide-react';
+import { Map, Car, Wallet, Route, Zap } from 'lucide-react';
 
-export type NavTab = 'map' | 'evs' | 'scan' | 'favourites' | 'trip';
+export type NavTab = 'map' | 'evs' | 'scan' | 'wallet' | 'trip';
 
 interface BottomNavProps {
   activeTab: NavTab;
@@ -182,9 +182,9 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           </span>
         </div>
 
-        {/* 4. Favourites */}
+        {/* 4. Wallet */}
         <button
-          onClick={() => onTabChange('favourites')}
+          onClick={() => onTabChange('wallet')}
           style={{
             flex: 1,
             height: '100%',
@@ -197,17 +197,17 @@ export const BottomNav: React.FC<BottomNavProps> = ({
             justifyContent: 'center',
             gap: '3px',
             cursor: 'pointer',
-            color: activeTab === 'favourites' ? '#059669' : '#64748b',
+            color: activeTab === 'wallet' ? '#059669' : '#64748b',
             transition: 'color 0.15s ease'
           }}
         >
-          <Heart size={24} strokeWidth={activeTab === 'favourites' ? 2.5 : 2} />
+          <Wallet size={24} strokeWidth={activeTab === 'wallet' ? 2.5 : 2} />
           <span style={{
             fontSize: '11px',
-            fontWeight: activeTab === 'favourites' ? 700 : 500,
+            fontWeight: activeTab === 'wallet' ? 700 : 500,
             letterSpacing: '0.1px'
           }}>
-            Favourites
+            Wallet
           </span>
         </button>
 
