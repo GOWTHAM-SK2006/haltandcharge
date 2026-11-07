@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  LayoutDashboard, MapPin, Zap, Users, Activity, Sliders, ShieldAlert, 
-  DollarSign, FileText, Settings, RefreshCw, LogOut, CheckCircle2, 
-  AlertTriangle, XCircle, PowerOff, Play, Shield, Trash2
+  LayoutDashboard, MapPin, Zap, Users, Activity, Sliders, 
+  DollarSign, FileText, RefreshCw, LogOut, Trash2, X
 } from 'lucide-react';
 import { apiRequest } from './api';
 import { AdminStats, Station, Charger, ChargingSession, User, SimulatorEvent, AuditLog } from './types';
@@ -173,34 +172,34 @@ export default function App() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'radial-gradient(circle at top right, #102319, #0a0d14 70%)',
+        background: 'radial-gradient(circle at top right, #ecfdf5 0%, #f8fafc 100%)',
         padding: '24px'
       }}>
         <div style={{
-          background: 'var(--bg-secondary)',
+          background: '#ffffff',
           border: '1px solid var(--border-color)',
           borderRadius: '16px',
           padding: '40px',
           width: '100%',
           maxWidth: '440px',
-          boxShadow: '0 20px 40px rgba(0,0,0,0.6)'
+          boxShadow: '0 20px 40px -15px rgba(0, 0, 0, 0.08)'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '28px' }}>
             <div style={{
               width: '44px',
               height: '44px',
               borderRadius: '12px',
-              background: 'linear-gradient(135deg, #00FF88, #059669)',
+              background: 'linear-gradient(135deg, #10b981, #059669)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#000',
-              boxShadow: '0 0 20px rgba(0, 255, 136, 0.4)'
+              color: '#ffffff',
+              boxShadow: '0 4px 14px rgba(16, 185, 129, 0.35)'
             }}>
               <Zap size={26} strokeWidth={2.5} />
             </div>
             <div>
-              <h1 style={{ fontSize: '22px', fontWeight: 800, letterSpacing: '-0.5px' }}>
+              <h1 style={{ fontSize: '22px', fontWeight: 800, letterSpacing: '-0.5px', color: 'var(--text-primary)' }}>
                 HALT <span style={{ color: 'var(--accent-neon)' }}>&</span> CHARGE
               </h1>
               <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Enterprise EV Charging Management</p>
@@ -209,7 +208,7 @@ export default function App() {
 
           <form onSubmit={handleLogin}>
             <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
                 Admin Email
               </label>
               <input
@@ -220,18 +219,19 @@ export default function App() {
                 style={{
                   width: '100%',
                   padding: '12px 14px',
-                  background: 'var(--bg-card)',
-                  border: '1px solid var(--border-color)',
+                  background: '#ffffff',
+                  border: '1.5px solid var(--border-color)',
                   borderRadius: '8px',
-                  color: '#fff',
+                  color: 'var(--text-primary)',
                   fontSize: '14px',
-                  outline: 'none'
+                  outline: 'none',
+                  boxSizing: 'border-box'
                 }}
               />
             </div>
 
             <div style={{ marginBottom: '24px' }}>
-              <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
                 Password
               </label>
               <input
@@ -242,21 +242,22 @@ export default function App() {
                 style={{
                   width: '100%',
                   padding: '12px 14px',
-                  background: 'var(--bg-card)',
-                  border: '1px solid var(--border-color)',
+                  background: '#ffffff',
+                  border: '1.5px solid var(--border-color)',
                   borderRadius: '8px',
-                  color: '#fff',
+                  color: 'var(--text-primary)',
                   fontSize: '14px',
-                  outline: 'none'
+                  outline: 'none',
+                  boxSizing: 'border-box'
                 }}
               />
             </div>
 
             {authError && (
               <div style={{
-                background: 'rgba(239, 68, 68, 0.15)',
-                border: '1px solid var(--accent-red)',
-                color: '#fca5a5',
+                background: '#fef2f2',
+                border: '1px solid #fecaca',
+                color: '#dc2626',
                 padding: '10px 14px',
                 borderRadius: '8px',
                 fontSize: '13px',
@@ -272,22 +273,31 @@ export default function App() {
               style={{
                 width: '100%',
                 padding: '14px',
-                background: 'linear-gradient(135deg, #00FF88, #10b981)',
+                background: 'linear-gradient(135deg, #10b981, #059669)',
                 border: 'none',
                 borderRadius: '8px',
-                color: '#052e16',
+                color: '#ffffff',
                 fontWeight: 700,
                 fontSize: '15px',
                 cursor: 'pointer',
                 transition: 'all 0.2s',
-                boxShadow: '0 4px 15px rgba(0, 255, 136, 0.3)'
+                boxShadow: '0 4px 14px rgba(16, 185, 129, 0.35)'
               }}
             >
               {isSubmitting ? 'Authenticating...' : 'Sign In to Dashboard'}
             </button>
           </form>
 
-          <div style={{ marginTop: '24px', padding: '12px', background: 'var(--bg-card)', borderRadius: '8px', fontSize: '12px', color: 'var(--text-secondary)', textAlign: 'center' }}>
+          <div style={{ 
+            marginTop: '24px', 
+            padding: '12px', 
+            background: 'var(--bg-primary)', 
+            border: '1px solid var(--border-color)',
+            borderRadius: '8px', 
+            fontSize: '12px', 
+            color: 'var(--text-secondary)', 
+            textAlign: 'center' 
+          }}>
             Demo Account: <strong>admin@haltcharge.com</strong> / <strong>Password@123</strong>
           </div>
         </div>
@@ -297,7 +307,7 @@ export default function App() {
 
   // Authenticated Admin Dashboard Layout
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-primary)' }}>
       {/* Sidebar */}
       <aside style={{
         width: '260px',
@@ -316,19 +326,20 @@ export default function App() {
             width: '36px',
             height: '36px',
             borderRadius: '10px',
-            background: 'linear-gradient(135deg, #00FF88, #059669)',
+            background: 'linear-gradient(135deg, #10b981, #059669)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: '#000'
+            color: '#ffffff',
+            boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
           }}>
             <Zap size={22} strokeWidth={2.5} />
           </div>
           <div>
-            <div style={{ fontWeight: 800, fontSize: '18px', letterSpacing: '-0.3px' }}>
+            <div style={{ fontWeight: 800, fontSize: '18px', letterSpacing: '-0.3px', color: 'var(--text-primary)' }}>
               HALT <span style={{ color: 'var(--accent-neon)' }}>&</span> CHARGE
             </div>
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.8px', fontWeight: 600 }}>
               Command Center
             </div>
           </div>
@@ -357,9 +368,9 @@ export default function App() {
                   gap: '12px',
                   padding: '12px 14px',
                   borderRadius: '8px',
-                  background: active ? 'rgba(0, 255, 136, 0.12)' : 'transparent',
+                  background: active ? '#ecfdf5' : 'transparent',
                   color: active ? 'var(--accent-neon)' : 'var(--text-secondary)',
-                  border: active ? '1px solid rgba(0, 255, 136, 0.3)' : '1px solid transparent',
+                  border: active ? '1px solid #a7f3d0' : '1px solid transparent',
                   fontWeight: active ? 600 : 500,
                   fontSize: '14px',
                   cursor: 'pointer',
@@ -372,10 +383,11 @@ export default function App() {
                 {item.badge && (
                   <span style={{
                     fontSize: '10px',
-                    padding: '2px 6px',
+                    padding: '2px 8px',
                     borderRadius: '10px',
-                    background: 'var(--accent-neon)',
-                    color: '#052e16',
+                    background: '#dcfce7',
+                    color: '#15803d',
+                    border: '1px solid #bbf7d0',
                     fontWeight: 700
                   }}>
                     {item.badge}
@@ -389,7 +401,7 @@ export default function App() {
         {/* User Footer */}
         <div style={{ padding: '16px', borderTop: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <div style={{ fontSize: '13px', fontWeight: 600 }}>Admin Console</div>
+            <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>Admin Console</div>
             <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>ROLE_ADMIN</div>
           </div>
           <button
@@ -414,10 +426,10 @@ export default function App() {
         {/* Top Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px' }}>
           <div>
-            <h2 style={{ fontSize: '24px', fontWeight: 700, textTransform: 'capitalize' }}>
+            <h2 style={{ fontSize: '24px', fontWeight: 700, textTransform: 'capitalize', color: 'var(--text-primary)' }}>
               {activeTab === 'simulator' ? 'Virtual EV Charger Simulator' : activeTab}
             </h2>
-            <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px' }}>
               Real-time monitoring and management of Halt & Charge charging network.
             </p>
           </div>
@@ -436,7 +448,8 @@ export default function App() {
                 color: 'var(--text-primary)',
                 cursor: 'pointer',
                 fontSize: '13px',
-                fontWeight: 600
+                fontWeight: 600,
+                boxShadow: '0 1px 2px rgba(0,0,0,0.04)'
               }}
             >
               <RefreshCw size={14} className={loading ? 'spin' : ''} />
@@ -447,13 +460,14 @@ export default function App() {
                 onClick={() => setShowAddStation(true)}
                 style={{
                   padding: '10px 16px',
-                  background: 'var(--accent-neon)',
-                  color: '#052e16',
+                  background: 'linear-gradient(135deg, #10b981, #059669)',
+                  color: '#ffffff',
                   border: 'none',
                   borderRadius: '8px',
                   fontWeight: 700,
                   fontSize: '13px',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 6px rgba(16, 185, 129, 0.3)'
                 }}
               >
                 + Add Station
@@ -464,13 +478,14 @@ export default function App() {
                 onClick={() => setShowAddCharger(true)}
                 style={{
                   padding: '10px 16px',
-                  background: 'var(--accent-neon)',
-                  color: '#052e16',
+                  background: 'linear-gradient(135deg, #10b981, #059669)',
+                  color: '#ffffff',
                   border: 'none',
                   borderRadius: '8px',
                   fontWeight: 700,
                   fontSize: '13px',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 6px rgba(16, 185, 129, 0.3)'
                 }}
               >
                 + Add Charger
@@ -489,27 +504,27 @@ export default function App() {
               gap: '20px',
               marginBottom: '32px'
             }}>
-              <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '20px' }}>
+              <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)', fontSize: '13px', marginBottom: '8px' }}>
                   <span>Total Stations</span>
                   <MapPin size={18} color="var(--accent-neon)" />
                 </div>
-                <div style={{ fontSize: '28px', fontWeight: 800 }}>{stats.totalStations}</div>
+                <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--text-primary)' }}>{stats.totalStations}</div>
                 <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Operational nationwide</div>
               </div>
 
-              <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '20px' }}>
+              <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)', fontSize: '13px', marginBottom: '8px' }}>
                   <span>Chargers Fleet</span>
-                  <Zap size={18} color="#38bdf8" />
+                  <Zap size={18} color="var(--accent-emerald)" />
                 </div>
-                <div style={{ fontSize: '28px', fontWeight: 800 }}>{stats.totalChargers}</div>
-                <div style={{ fontSize: '12px', color: 'var(--accent-emerald)', marginTop: '4px' }}>
+                <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--text-primary)' }}>{stats.totalChargers}</div>
+                <div style={{ fontSize: '12px', color: 'var(--accent-neon)', marginTop: '4px', fontWeight: 600 }}>
                   {stats.availableChargers} Available • {stats.chargingChargers} Active
                 </div>
               </div>
 
-              <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '20px' }}>
+              <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)', fontSize: '13px', marginBottom: '8px' }}>
                   <span>Active Sessions</span>
                   <Activity size={18} color="var(--accent-amber)" />
@@ -518,23 +533,23 @@ export default function App() {
                 <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>{stats.completedSessions} completed total</div>
               </div>
 
-              <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '20px' }}>
+              <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)', fontSize: '13px', marginBottom: '8px' }}>
                   <span>Simulated Energy (kWh)</span>
                   <Zap size={18} color="var(--accent-neon)" />
                 </div>
-                <div style={{ fontSize: '28px', fontWeight: 800 }}>{Number(stats.simulatedEnergyKwh).toFixed(2)}</div>
+                <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--text-primary)' }}>{Number(stats.simulatedEnergyKwh).toFixed(2)}</div>
                 <div style={{ fontSize: '11px', color: 'var(--accent-amber)', marginTop: '4px', fontWeight: 600 }}>
                   [SIMULATED DATA ONLY]
                 </div>
               </div>
 
-              <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '20px' }}>
+              <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)', fontSize: '13px', marginBottom: '8px' }}>
                   <span>Simulated Revenue</span>
-                  <DollarSign size={18} color="#a855f7" />
+                  <DollarSign size={18} color="#059669" />
                 </div>
-                <div style={{ fontSize: '28px', fontWeight: 800 }}>₹{Number(stats.simulatedRevenue).toFixed(2)}</div>
+                <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--text-primary)' }}>₹{Number(stats.simulatedRevenue).toFixed(2)}</div>
                 <div style={{ fontSize: '11px', color: 'var(--accent-amber)', marginTop: '4px', fontWeight: 600 }}>
                   [ESTIMATE - NO FAKE PAYMENTS]
                 </div>
@@ -542,11 +557,11 @@ export default function App() {
             </div>
 
             {/* Live Chargers Status Table */}
-            <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '24px', marginBottom: '32px' }}>
-              <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '16px' }}>Network Chargers Availability</h3>
+            <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '24px', marginBottom: '32px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '16px', color: 'var(--text-primary)' }}>Network Chargers Availability</h3>
               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
                 <thead>
-                  <tr style={{ color: 'var(--text-secondary)', borderBottom: '1px solid var(--border-color)' }}>
+                  <tr style={{ color: 'var(--text-secondary)', borderBottom: '1px solid var(--border-color)', background: '#f8fafc' }}>
                     <th style={{ padding: '12px' }}>Identifier</th>
                     <th style={{ padding: '12px' }}>Name</th>
                     <th style={{ padding: '12px' }}>Type</th>
@@ -560,7 +575,7 @@ export default function App() {
                   {chargers.map(c => (
                     <tr key={c.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
                       <td style={{ padding: '12px', fontFamily: 'monospace', fontWeight: 600 }}>{c.identifier}</td>
-                      <td style={{ padding: '12px' }}>{c.name}</td>
+                      <td style={{ padding: '12px', color: 'var(--text-primary)' }}>{c.name}</td>
                       <td style={{ padding: '12px' }}>{c.chargerType}</td>
                       <td style={{ padding: '12px' }}>{c.maxPowerKw} kW</td>
                       <td style={{ padding: '12px' }}>₹{c.tariffPerKwh}/kWh</td>
@@ -570,12 +585,15 @@ export default function App() {
                           borderRadius: '6px',
                           fontSize: '11px',
                           fontWeight: 700,
-                          background: c.status === 'AVAILABLE' ? 'rgba(16, 185, 129, 0.2)' :
-                                      c.status === 'CHARGING' ? 'rgba(0, 255, 136, 0.2)' :
-                                      c.status === 'FAULTED' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(148, 163, 184, 0.2)',
-                          color: c.status === 'AVAILABLE' ? 'var(--accent-emerald)' :
-                                 c.status === 'CHARGING' ? 'var(--accent-neon)' :
-                                 c.status === 'FAULTED' ? 'var(--accent-red)' : 'var(--text-secondary)'
+                          background: c.status === 'AVAILABLE' ? '#ecfdf5' :
+                                      c.status === 'CHARGING' ? '#f0fdf4' :
+                                      c.status === 'FAULTED' ? '#fef2f2' : '#f1f5f9',
+                          color: c.status === 'AVAILABLE' ? '#059669' :
+                                 c.status === 'CHARGING' ? '#16a34a' :
+                                 c.status === 'FAULTED' ? '#dc2626' : '#475569',
+                          border: c.status === 'AVAILABLE' ? '1px solid #a7f3d0' :
+                                  c.status === 'CHARGING' ? '1px solid #bbf7d0' :
+                                  c.status === 'FAULTED' ? '1px solid #fecaca' : '1px solid #cbd5e1'
                         }}>
                           {c.status}
                         </span>
@@ -597,19 +615,19 @@ export default function App() {
         {activeTab === 'simulator' && (
           <div>
             <div style={{
-              background: 'rgba(0, 255, 136, 0.08)',
-              border: '1px solid rgba(0, 255, 136, 0.25)',
+              background: '#ecfdf5',
+              border: '1px solid #a7f3d0',
               borderRadius: '12px',
               padding: '18px 24px',
               marginBottom: '28px'
             }}>
-              <h3 style={{ fontSize: '15px', color: 'var(--accent-neon)', fontWeight: 700, marginBottom: '6px' }}>
+              <h3 style={{ fontSize: '15px', color: '#065f46', fontWeight: 700, marginBottom: '6px' }}>
                 Virtual EV Charger Hardware Simulator Engine
               </h3>
-              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
+              <p style={{ fontSize: '13px', color: '#047857', lineHeight: '1.5' }}>
                 Since physical EV chargers are not initially available, this simulator reproduces real hardware telemetry,
                 power curves, continuous energy (kWh) increments, socket states and hardware fault injections.
-                All data generated is tagged <code>[SIMULATED]</code> in the database.
+                All data generated is tagged <code style={{ background: '#d1fae5', color: '#065f46' }}>[SIMULATED]</code> in the database.
               </p>
             </div>
 
@@ -624,11 +642,12 @@ export default function App() {
                   background: 'var(--bg-secondary)',
                   border: '1px solid var(--border-color)',
                   borderRadius: '12px',
-                  padding: '20px'
+                  padding: '20px',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: '15px' }}>{c.identifier}</div>
+                      <div style={{ fontWeight: 700, fontSize: '15px', color: 'var(--text-primary)' }}>{c.identifier}</div>
                       <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{c.name}</div>
                     </div>
                     <span style={{
@@ -636,12 +655,15 @@ export default function App() {
                       borderRadius: '6px',
                       fontSize: '11px',
                       fontWeight: 700,
-                      background: c.status === 'AVAILABLE' ? 'rgba(16, 185, 129, 0.2)' :
-                                  c.status === 'CHARGING' ? 'rgba(0, 255, 136, 0.2)' :
-                                  c.status === 'FAULTED' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(148, 163, 184, 0.2)',
-                      color: c.status === 'AVAILABLE' ? 'var(--accent-emerald)' :
-                             c.status === 'CHARGING' ? 'var(--accent-neon)' :
-                             c.status === 'FAULTED' ? 'var(--accent-red)' : 'var(--text-secondary)'
+                      background: c.status === 'AVAILABLE' ? '#ecfdf5' :
+                                  c.status === 'CHARGING' ? '#f0fdf4' :
+                                  c.status === 'FAULTED' ? '#fef2f2' : '#f1f5f9',
+                      color: c.status === 'AVAILABLE' ? '#059669' :
+                             c.status === 'CHARGING' ? '#16a34a' :
+                             c.status === 'FAULTED' ? '#dc2626' : '#475569',
+                      border: c.status === 'AVAILABLE' ? '1px solid #a7f3d0' :
+                              c.status === 'CHARGING' ? '1px solid #bbf7d0' :
+                              c.status === 'FAULTED' ? '1px solid #fecaca' : '1px solid #cbd5e1'
                     }}>
                       {c.status}
                     </span>
@@ -658,13 +680,14 @@ export default function App() {
                       disabled={c.status === 'FAULTED'}
                       style={{
                         padding: '6px 12px',
-                        background: 'rgba(239, 68, 68, 0.15)',
-                        border: '1px solid var(--accent-red)',
+                        background: '#fef2f2',
+                        border: '1px solid #fca5a5',
                         borderRadius: '6px',
-                        color: '#fca5a5',
+                        color: '#dc2626',
                         fontSize: '12px',
                         fontWeight: 600,
-                        cursor: 'pointer'
+                        cursor: c.status === 'FAULTED' ? 'not-allowed' : 'pointer',
+                        opacity: c.status === 'FAULTED' ? 0.6 : 1
                       }}
                     >
                       Simulate Fault
@@ -674,13 +697,14 @@ export default function App() {
                       disabled={c.status === 'OFFLINE'}
                       style={{
                         padding: '6px 12px',
-                        background: 'rgba(148, 163, 184, 0.15)',
-                        border: '1px solid var(--border-color)',
+                        background: '#f1f5f9',
+                        border: '1px solid #cbd5e1',
                         borderRadius: '6px',
-                        color: 'var(--text-secondary)',
+                        color: '#475569',
                         fontSize: '12px',
                         fontWeight: 600,
-                        cursor: 'pointer'
+                        cursor: c.status === 'OFFLINE' ? 'not-allowed' : 'pointer',
+                        opacity: c.status === 'OFFLINE' ? 0.6 : 1
                       }}
                     >
                       Simulate Offline
@@ -690,13 +714,14 @@ export default function App() {
                       disabled={c.status === 'AVAILABLE'}
                       style={{
                         padding: '6px 12px',
-                        background: 'rgba(0, 255, 136, 0.15)',
-                        border: '1px solid var(--accent-neon)',
+                        background: '#ecfdf5',
+                        border: '1px solid #a7f3d0',
                         borderRadius: '6px',
-                        color: 'var(--accent-neon)',
+                        color: '#059669',
                         fontSize: '12px',
                         fontWeight: 600,
-                        cursor: 'pointer'
+                        cursor: c.status === 'AVAILABLE' ? 'not-allowed' : 'pointer',
+                        opacity: c.status === 'AVAILABLE' ? 0.6 : 1
                       }}
                     >
                       Restore Available
@@ -707,11 +732,11 @@ export default function App() {
             </div>
 
             {/* Event history */}
-            <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '24px' }}>
-              <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '16px' }}>Simulator Event Stream</h3>
+            <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '16px', color: 'var(--text-primary)' }}>Simulator Event Stream</h3>
               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
                 <thead>
-                  <tr style={{ color: 'var(--text-secondary)', borderBottom: '1px solid var(--border-color)' }}>
+                  <tr style={{ color: 'var(--text-secondary)', borderBottom: '1px solid var(--border-color)', background: '#f8fafc' }}>
                     <th style={{ padding: '10px' }}>Charger</th>
                     <th style={{ padding: '10px' }}>Event</th>
                     <th style={{ padding: '10px' }}>Details</th>
@@ -722,7 +747,7 @@ export default function App() {
                   {events.map(ev => (
                     <tr key={ev.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
                       <td style={{ padding: '10px', fontFamily: 'monospace' }}>{ev.charger_identifier || `Charger #${ev.charger_id}`}</td>
-                      <td style={{ padding: '10px', fontWeight: 600, color: 'var(--accent-cyan)' }}>{ev.event_type}</td>
+                      <td style={{ padding: '10px', fontWeight: 600, color: '#0284c7' }}>{ev.event_type}</td>
                       <td style={{ padding: '10px', color: 'var(--text-secondary)' }}>{ev.details}</td>
                       <td style={{ padding: '10px', color: 'var(--text-muted)' }}>{new Date(ev.created_at).toLocaleTimeString()}</td>
                     </tr>
@@ -735,11 +760,11 @@ export default function App() {
 
         {/* Tab 3: Stations Management */}
         {activeTab === 'stations' && (
-          <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '24px' }}>
-            <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '16px' }}>Network Hub Stations</h3>
+          <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '16px', color: 'var(--text-primary)' }}>Network Hub Stations</h3>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
               <thead>
-                <tr style={{ color: 'var(--text-secondary)', borderBottom: '1px solid var(--border-color)' }}>
+                <tr style={{ color: 'var(--text-secondary)', borderBottom: '1px solid var(--border-color)', background: '#f8fafc' }}>
                   <th style={{ padding: '12px' }}>Name</th>
                   <th style={{ padding: '12px' }}>Address</th>
                   <th style={{ padding: '12px' }}>City</th>
@@ -751,7 +776,7 @@ export default function App() {
               <tbody>
                 {stations.map(st => (
                   <tr key={st.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                    <td style={{ padding: '12px', fontWeight: 600 }}>{st.name}</td>
+                    <td style={{ padding: '12px', fontWeight: 600, color: 'var(--text-primary)' }}>{st.name}</td>
                     <td style={{ padding: '12px', color: 'var(--text-secondary)' }}>{st.address}</td>
                     <td style={{ padding: '12px' }}>{st.city}</td>
                     <td style={{ padding: '12px', fontFamily: 'monospace', fontSize: '12px' }}>{st.latitude}, {st.longitude}</td>
@@ -762,8 +787,9 @@ export default function App() {
                         borderRadius: '6px',
                         fontSize: '11px',
                         fontWeight: 700,
-                        background: st.isActive ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                        color: st.isActive ? 'var(--accent-emerald)' : 'var(--accent-red)'
+                        background: st.isActive ? '#ecfdf5' : '#fef2f2',
+                        color: st.isActive ? '#059669' : '#dc2626',
+                        border: st.isActive ? '1px solid #a7f3d0' : '1px solid #fecaca'
                       }}>
                         {st.status}
                       </span>
@@ -777,11 +803,11 @@ export default function App() {
 
         {/* Tab 4: Charging Sessions */}
         {activeTab === 'sessions' && (
-          <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '24px' }}>
-            <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '16px' }}>Session History & Live Metering</h3>
+          <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '16px', color: 'var(--text-primary)' }}>Session History & Live Metering</h3>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
               <thead>
-                <tr style={{ color: 'var(--text-secondary)', borderBottom: '1px solid var(--border-color)' }}>
+                <tr style={{ color: 'var(--text-secondary)', borderBottom: '1px solid var(--border-color)', background: '#f8fafc' }}>
                   <th style={{ padding: '12px' }}>Session UID</th>
                   <th style={{ padding: '12px' }}>User</th>
                   <th style={{ padding: '12px' }}>Station / Charger</th>
@@ -810,8 +836,9 @@ export default function App() {
                         borderRadius: '6px',
                         fontSize: '11px',
                         fontWeight: 700,
-                        background: s.status === 'IN_PROGRESS' ? 'rgba(0, 255, 136, 0.2)' : 'rgba(148, 163, 184, 0.2)',
-                        color: s.status === 'IN_PROGRESS' ? 'var(--accent-neon)' : 'var(--text-secondary)'
+                        background: s.status === 'IN_PROGRESS' ? '#ecfdf5' : '#f1f5f9',
+                        color: s.status === 'IN_PROGRESS' ? '#059669' : '#475569',
+                        border: s.status === 'IN_PROGRESS' ? '1px solid #a7f3d0' : '1px solid #cbd5e1'
                       }}>
                         {s.status}
                       </span>
@@ -825,11 +852,11 @@ export default function App() {
 
         {/* Tab 5: Users */}
         {activeTab === 'users' && (
-          <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '24px' }}>
-            <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '16px' }}>Registered Customers</h3>
+          <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '16px', color: 'var(--text-primary)' }}>Registered Customers</h3>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
               <thead>
-                <tr style={{ color: 'var(--text-secondary)', borderBottom: '1px solid var(--border-color)' }}>
+                <tr style={{ color: 'var(--text-secondary)', borderBottom: '1px solid var(--border-color)', background: '#f8fafc' }}>
                   <th style={{ padding: '12px' }}>ID</th>
                   <th style={{ padding: '12px' }}>Full Name</th>
                   <th style={{ padding: '12px' }}>Email</th>
@@ -850,8 +877,8 @@ export default function App() {
                   users.filter(u => u.role !== 'ROLE_ADMIN' && u.email !== 'admin@haltcharge.com').map(u => (
                     <tr key={u.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
                       <td style={{ padding: '12px' }}>#{u.id}</td>
-                      <td style={{ padding: '12px', fontWeight: 600 }}>{u.fullName}</td>
-                      <td style={{ padding: '12px' }}>{u.email}</td>
+                      <td style={{ padding: '12px', fontWeight: 600, color: 'var(--text-primary)' }}>{u.fullName}</td>
+                      <td style={{ padding: '12px', color: 'var(--text-secondary)' }}>{u.email}</td>
                       <td style={{ padding: '12px' }}><code>{u.role}</code></td>
                       <td style={{ padding: '12px' }}>
                         <span style={{
@@ -859,21 +886,22 @@ export default function App() {
                           borderRadius: '6px',
                           fontSize: '11px',
                           fontWeight: 700,
-                          background: u.status === 'ACTIVE' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                          color: u.status === 'ACTIVE' ? 'var(--accent-emerald)' : 'var(--accent-red)'
+                          background: u.status === 'ACTIVE' ? '#ecfdf5' : '#fef2f2',
+                          color: u.status === 'ACTIVE' ? '#059669' : '#dc2626',
+                          border: u.status === 'ACTIVE' ? '1px solid #a7f3d0' : '1px solid #fecaca'
                         }}>
                           {u.status}
                         </span>
                       </td>
-                      <td style={{ padding: '12px' }}>₹{Number(u.walletBalance).toFixed(2)}</td>
+                      <td style={{ padding: '12px', fontWeight: 600 }}>₹{Number(u.walletBalance).toFixed(2)}</td>
                       <td style={{ padding: '12px', textAlign: 'right' }}>
                         <button
                           onClick={() => handleDeleteUser(u.id, u.fullName || u.email)}
                           title="Permanently Delete User"
                           style={{
-                            background: 'rgba(239, 68, 68, 0.15)',
-                            border: '1px solid rgba(239, 68, 68, 0.4)',
-                            color: '#ef4444',
+                            background: '#fef2f2',
+                            border: '1px solid #fecaca',
+                            color: '#dc2626',
                             padding: '6px 12px',
                             borderRadius: '6px',
                             fontSize: '12px',
@@ -884,8 +912,8 @@ export default function App() {
                             gap: '6px',
                             transition: 'all 0.15s ease'
                           }}
-                          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239, 68, 68, 0.3)')}
-                          onMouseLeave={e => (e.currentTarget.style.background = 'rgba(239, 68, 68, 0.15)')}
+                          onMouseEnter={e => (e.currentTarget.style.background = '#fee2e2')}
+                          onMouseLeave={e => (e.currentTarget.style.background = '#fef2f2')}
                         >
                           <Trash2 size={14} />
                           <span>Delete</span>
@@ -901,11 +929,11 @@ export default function App() {
 
         {/* Tab 6: Audit Logs */}
         {activeTab === 'audit' && (
-          <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '24px' }}>
-            <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '16px' }}>Security & Audit Trail</h3>
+          <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '16px', color: 'var(--text-primary)' }}>Security & Audit Trail</h3>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
               <thead>
-                <tr style={{ color: 'var(--text-secondary)', borderBottom: '1px solid var(--border-color)' }}>
+                <tr style={{ color: 'var(--text-secondary)', borderBottom: '1px solid var(--border-color)', background: '#f8fafc' }}>
                   <th style={{ padding: '10px' }}>Timestamp</th>
                   <th style={{ padding: '10px' }}>User</th>
                   <th style={{ padding: '10px' }}>Action</th>
@@ -927,8 +955,234 @@ export default function App() {
             </table>
           </div>
         )}
+
+        {/* Add Station Modal */}
+        {showAddStation && (
+          <div style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(15, 23, 42, 0.45)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '20px'
+          }}>
+            <div style={{
+              background: '#ffffff',
+              borderRadius: '16px',
+              border: '1px solid var(--border-color)',
+              padding: '28px',
+              width: '100%',
+              maxWidth: '520px',
+              boxShadow: '0 20px 40px -10px rgba(0,0,0,0.1)'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)' }}>Add New Hub Station</h3>
+                <button 
+                  onClick={() => setShowAddStation(false)}
+                  style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <form onSubmit={handleCreateStation}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px' }}>
+                  <div style={{ gridColumn: 'span 2' }}>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>Station Name</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Indiranagar EV Hub"
+                      value={newStation.name}
+                      onChange={e => setNewStation({ ...newStation, name: e.target.value })}
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1.5px solid var(--border-color)', fontSize: '13px', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                  <div style={{ gridColumn: 'span 2' }}>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>Address</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. 100 Feet Rd, Indiranagar"
+                      value={newStation.address}
+                      onChange={e => setNewStation({ ...newStation, address: e.target.value })}
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1.5px solid var(--border-color)', fontSize: '13px', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>City</label>
+                    <input
+                      type="text"
+                      value={newStation.city}
+                      onChange={e => setNewStation({ ...newStation, city: e.target.value })}
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1.5px solid var(--border-color)', fontSize: '13px', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>Postal Code</label>
+                    <input
+                      type="text"
+                      value={newStation.postalCode}
+                      onChange={e => setNewStation({ ...newStation, postalCode: e.target.value })}
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1.5px solid var(--border-color)', fontSize: '13px', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>Latitude</label>
+                    <input
+                      type="number"
+                      step="any"
+                      value={newStation.latitude}
+                      onChange={e => setNewStation({ ...newStation, latitude: parseFloat(e.target.value) })}
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1.5px solid var(--border-color)', fontSize: '13px', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>Longitude</label>
+                    <input
+                      type="number"
+                      step="any"
+                      value={newStation.longitude}
+                      onChange={e => setNewStation({ ...newStation, longitude: parseFloat(e.target.value) })}
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1.5px solid var(--border-color)', fontSize: '13px', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddStation(false)}
+                    style={{ padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', background: '#ffffff', color: 'var(--text-secondary)', cursor: 'pointer', fontWeight: 600, fontSize: '13px' }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    style={{ padding: '10px 18px', borderRadius: '8px', border: 'none', background: 'linear-gradient(135deg, #10b981, #059669)', color: '#ffffff', cursor: 'pointer', fontWeight: 700, fontSize: '13px', boxShadow: '0 2px 6px rgba(16, 185, 129, 0.3)' }}
+                  >
+                    Create Station
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Add Charger Modal */}
+        {showAddCharger && (
+          <div style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(15, 23, 42, 0.45)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '20px'
+          }}>
+            <div style={{
+              background: '#ffffff',
+              borderRadius: '16px',
+              border: '1px solid var(--border-color)',
+              padding: '28px',
+              width: '100%',
+              maxWidth: '480px',
+              boxShadow: '0 20px 40px -10px rgba(0,0,0,0.1)'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)' }}>Add New Charger</h3>
+                <button 
+                  onClick={() => setShowAddCharger(false)}
+                  style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <form onSubmit={handleCreateCharger}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '16px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>Assign Station</label>
+                    <select
+                      value={newCharger.stationId}
+                      onChange={e => setNewCharger({ ...newCharger, stationId: parseInt(e.target.value) })}
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1.5px solid var(--border-color)', fontSize: '13px', background: '#ffffff', boxSizing: 'border-box' }}
+                    >
+                      {stations.map(st => (
+                        <option key={st.id} value={st.id}>{st.name} ({st.city})</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>Charger Identifier</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. HC-INDIRA-DC-01"
+                      value={newCharger.identifier}
+                      onChange={e => setNewCharger({ ...newCharger, identifier: e.target.value })}
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1.5px solid var(--border-color)', fontSize: '13px', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>Charger Name</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. CCS2 120kW Fast Gun"
+                      value={newCharger.name}
+                      onChange={e => setNewCharger({ ...newCharger, name: e.target.value })}
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1.5px solid var(--border-color)', fontSize: '13px', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>Max Power (kW)</label>
+                      <input
+                        type="number"
+                        value={newCharger.maxPowerKw}
+                        onChange={e => setNewCharger({ ...newCharger, maxPowerKw: parseFloat(e.target.value) })}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1.5px solid var(--border-color)', fontSize: '13px', boxSizing: 'border-box' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>Tariff (₹/kWh)</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={newCharger.tariffPerKwh}
+                        onChange={e => setNewCharger({ ...newCharger, tariffPerKwh: parseFloat(e.target.value) })}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1.5px solid var(--border-color)', fontSize: '13px', boxSizing: 'border-box' }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddCharger(false)}
+                    style={{ padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', background: '#ffffff', color: 'var(--text-secondary)', cursor: 'pointer', fontWeight: 600, fontSize: '13px' }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    style={{ padding: '10px 18px', borderRadius: '8px', border: 'none', background: 'linear-gradient(135deg, #10b981, #059669)', color: '#ffffff', cursor: 'pointer', fontWeight: 700, fontSize: '13px', boxShadow: '0 2px 6px rgba(16, 185, 129, 0.3)' }}
+                  >
+                    Create Charger
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
 }
-

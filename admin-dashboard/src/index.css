@@ -1,19 +1,26 @@
 :root {
-  --bg-primary: #0a0d14;
-  --bg-secondary: #101622;
-  --bg-card: #151d2c;
-  --bg-hover: #1c2639;
-  --accent-neon: #00FF88;
-  --accent-neon-glow: rgba(0, 255, 136, 0.25);
-  --accent-emerald: #10b981;
-  --accent-cyan: #06b6d4;
-  --accent-amber: #f59e0b;
-  --accent-red: #ef4444;
-  --text-primary: #ffffff;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  --border-color: #243045;
-  --border-subtle: #1a2333;
+  /* Brand White & Green Theme */
+  --bg-primary: #f8fafc;          /* Slate 50 - clean canvas background */
+  --bg-secondary: #ffffff;        /* Pure White - cards, sidebar, tables */
+  --bg-card: #ffffff;             /* Pure White - metric cards */
+  --bg-hover: #f1f5f9;            /* Slate 100 - active/hover menu items */
+
+  /* Halt & Charge Green Accents */
+  --accent-neon: #059669;         /* Emerald 600 - Main Brand Green */
+  --accent-neon-glow: rgba(5, 150, 105, 0.2);
+  --accent-emerald: #10b981;      /* Emerald 500 */
+  --accent-cyan: #0284c7;         /* Sky 600 */
+  --accent-amber: #d97706;        /* Amber 600 */
+  --accent-red: #ef4444;          /* Red 500 */
+
+  /* High Contrast Typography */
+  --text-primary: #0f172a;        /* Slate 900 - bold dark readable text */
+  --text-secondary: #475569;      /* Slate 600 - secondary labels */
+  --text-muted: #64748b;          /* Slate 500 - subtle text */
+
+  /* Crisp Borders */
+  --border-color: #e2e8f0;        /* Slate 200 */
+  --border-subtle: #f1f5f9;       /* Slate 100 */
 }
 
 * {
@@ -28,10 +35,33 @@ body {
   color: var(--text-primary);
   min-height: 100vh;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+tbody tr:hover {
+  background-color: #f8fafc;
 }
 
 code, pre {
   font-family: 'JetBrains Mono', monospace;
+  background: var(--bg-hover);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--accent-neon);
+  font-size: 12px;
 }
 
 /* Custom scrollbars */
@@ -49,4 +79,3 @@ code, pre {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
 }
-
