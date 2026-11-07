@@ -31,3 +31,4 @@ SET password_hash = '$2a$10$tlrY2uW9/UPkg3NOzIroguhY8aLuznA4L649n8DB3JdYy9jUJGKT
     role = 'ROLE_CUSTOMER',
     status = 'ACTIVE'
 WHERE email = 'customer@haltcharge.com';
+

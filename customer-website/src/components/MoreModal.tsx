@@ -18,7 +18,8 @@ import {
   Phone,
   Mail,
   Send,
-  Star
+  Star,
+  User
 } from 'lucide-react';
 import { UserProfile, ChargingSession } from '../types';
 
@@ -58,10 +59,6 @@ export const MoreModal: React.FC<MoreModalProps> = ({
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
   const [partnerSubmitted, setPartnerSubmitted] = useState(false);
 
-  // User display name & phone
-  const displayName = profile?.fullName || 'Gowtham S';
-  const displayPhone = profile?.phoneNumber || '+91 9363624212';
-
   return (
     <div style={{
       position: 'fixed',
@@ -86,109 +83,166 @@ export const MoreModal: React.FC<MoreModalProps> = ({
         flexDirection: 'column',
         padding: '24px 20px 40px'
       }}>
-        {/* 1. Profile Header (Matches Reference Screenshot) */}
-        <div
-          onClick={() => (!profile ? onOpenAuth() : null)}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '16px 4px 20px',
-            cursor: profile ? 'default' : 'pointer'
-          }}
-        >
-          <div>
-            <h2 style={{
-              fontSize: '20px',
-              fontWeight: 800,
-              color: 'var(--hc-text-primary)',
-              letterSpacing: '-0.3px',
-              fontFamily: 'inherit'
-            }}>
-              {displayName}
-            </h2>
-            <p style={{
-              fontSize: '14px',
-              fontWeight: 600,
-              color: 'var(--hc-text-muted)',
-              marginTop: '4px'
-            }}>
-              {displayPhone}
-            </p>
-          </div>
+        {/* 1. Header: Shows User Profile IF SIGNED IN, or Sign In banner IF SIGNED OUT */}
+        {profile ? (
+          <>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '16px 4px 20px'
+              }}
+            >
+              <div>
+                <h2 style={{
+                  fontSize: '20px',
+                  fontWeight: 800,
+                  color: 'var(--hc-text-primary)',
+                  letterSpacing: '-0.3px',
+                  fontFamily: 'inherit'
+                }}>
+                  {profile.fullName || 'User'}
+                </h2>
+                <p style={{
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  color: 'var(--hc-text-muted)',
+                  marginTop: '4px'
+                }}>
+                  {profile.phoneNumber || profile.email}
+                </p>
+              </div>
 
-          <button
-            onClick={() => (!profile ? onOpenAuth() : null)}
-            style={{
-              width: '32px',
-              height: '32px',
-              borderRadius: '50%',
-              backgroundColor: 'var(--hc-text-secondary)',
-              color: '#ffffff',
-              border: 'none',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer'
-            }}
-          >
-            <ChevronRight size={18} strokeWidth={2.5} />
-          </button>
-        </div>
+              <div style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                backgroundColor: 'var(--hc-text-secondary)',
+                color: '#ffffff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <ChevronRight size={18} strokeWidth={2.5} />
+              </div>
+            </div>
 
-        {/* Divider Line */}
-        <div style={{
-          height: '1px',
-          backgroundColor: '#e5e7eb',
-          width: '100%',
-          marginBottom: '16px'
-        }} />
+            {/* Divider Line */}
+            <div style={{
+              height: '1px',
+              backgroundColor: '#e5e7eb',
+              width: '100%',
+              marginBottom: '16px'
+            }} />
+          </>
+        ) : (
+          /* When SIGNED OUT: Show prominent Sign In / Register CTA Card */
+          <>
+            <div
+              onClick={onOpenAuth}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '16px 18px',
+                borderRadius: '16px',
+                backgroundColor: 'var(--hc-green-subtle)',
+                border: '1.5px solid var(--hc-green-border)',
+                cursor: 'pointer',
+                marginBottom: '20px',
+                transition: 'all 0.15s ease'
+              }}
+              onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#dcfce7')}
+              onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'var(--hc-green-subtle)')}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                <div style={{
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: '50%',
+                  backgroundColor: 'var(--hc-green-primary)',
+                  color: '#ffffff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: 'var(--hc-shadow-sm)'
+                }}>
+                  <User size={22} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '16px', fontWeight: 800, color: 'var(--hc-green-darker)' }}>
+                    Sign In / Register
+                  </h3>
+                  <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--hc-green-dark)', marginTop: '2px' }}>
+                    Tap to access EV wallet, vehicles & history
+                  </p>
+                </div>
+              </div>
+              <ChevronRight size={20} color="var(--hc-green-primary)" />
+            </div>
 
-        {/* 2. Menu List Items (Matches Reference Screenshot Order & Icons) */}
+            {/* Divider Line */}
+            <div style={{
+              height: '1px',
+              backgroundColor: '#e5e7eb',
+              width: '100%',
+              marginBottom: '16px'
+            }} />
+          </>
+        )}
+
+        {/* 2. Menu List Items */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          {/* Wallet */}
-          <button
-            onClick={onOpenWallet}
-            style={menuItemStyle}
-            onMouseEnter={handleHover}
-            onMouseLeave={handleUnhover}
-          >
-            <div style={iconContainerStyle}>
-              <Wallet size={20} color="#374151" strokeWidth={2.2} />
-            </div>
-            <span style={menuItemTextStyle}>Wallet</span>
-            <span style={{ marginLeft: 'auto', fontSize: '13px', fontWeight: 800, color: 'var(--hc-green-primary)' }}>
-              ₹{Number(walletBalance || 0).toFixed(2)}
-            </span>
-          </button>
+          {/* Wallet - Visible ONLY when signed in */}
+          {profile && (
+            <button
+              onClick={onOpenWallet}
+              style={menuItemStyle}
+              onMouseEnter={handleHover}
+              onMouseLeave={handleUnhover}
+            >
+              <div style={iconContainerStyle}>
+                <Wallet size={20} color="#374151" strokeWidth={2.2} />
+              </div>
+              <span style={menuItemTextStyle}>Wallet</span>
+              <span style={{ marginLeft: 'auto', fontSize: '13px', fontWeight: 800, color: 'var(--hc-green-primary)' }}>
+                ₹{Number(walletBalance || 0).toFixed(2)}
+              </span>
+            </button>
+          )}
 
-          {/* Charge History */}
-          <button
-            onClick={() => setActiveSubModal('history')}
-            style={menuItemStyle}
-            onMouseEnter={handleHover}
-            onMouseLeave={handleUnhover}
-          >
-            <div style={iconContainerStyle}>
-              <History size={20} color="#374151" strokeWidth={2.2} />
-            </div>
-            <span style={menuItemTextStyle}>Charge History</span>
-          </button>
+          {/* Charge History - Visible ONLY when signed in */}
+          {profile && (
+            <button
+              onClick={() => setActiveSubModal('history')}
+              style={menuItemStyle}
+              onMouseEnter={handleHover}
+              onMouseLeave={handleUnhover}
+            >
+              <div style={iconContainerStyle}>
+                <History size={20} color="#374151" strokeWidth={2.2} />
+              </div>
+              <span style={menuItemTextStyle}>Charge History</span>
+            </button>
+          )}
 
-          {/* RFIDs and Autocharge */}
-          <button
-            onClick={() => setActiveSubModal('rfid')}
-            style={menuItemStyle}
-            onMouseEnter={handleHover}
-            onMouseLeave={handleUnhover}
-          >
-            <div style={iconContainerStyle}>
-              <CreditCard size={20} color="#374151" strokeWidth={2.2} />
-            </div>
-            <span style={menuItemTextStyle}>RFIDs and Autocharge</span>
-          </button>
+          {/* RFIDs and Autocharge - Visible ONLY when signed in */}
+          {profile && (
+            <button
+              onClick={() => setActiveSubModal('rfid')}
+              style={menuItemStyle}
+              onMouseEnter={handleHover}
+              onMouseLeave={handleUnhover}
+            >
+              <div style={iconContainerStyle}>
+                <CreditCard size={20} color="#374151" strokeWidth={2.2} />
+              </div>
+              <span style={menuItemTextStyle}>RFIDs and Autocharge</span>
+            </button>
+          )}
 
-          {/* Buy Charger */}
+          {/* Buy Charger - ALWAYS visible (Public store) */}
           <button
             onClick={() => setActiveSubModal('buy-charger')}
             style={menuItemStyle}
@@ -201,7 +255,7 @@ export const MoreModal: React.FC<MoreModalProps> = ({
             <span style={menuItemTextStyle}>Buy Charger</span>
           </button>
 
-          {/* Partner With Us */}
+          {/* Partner With Us - ALWAYS visible (Public inquiry) */}
           <button
             onClick={() => setActiveSubModal('partner')}
             style={menuItemStyle}
@@ -214,20 +268,22 @@ export const MoreModal: React.FC<MoreModalProps> = ({
             <span style={menuItemTextStyle}>Partner With Us</span>
           </button>
 
-          {/* Notification */}
-          <button
-            onClick={() => setActiveSubModal('notifications')}
-            style={menuItemStyle}
-            onMouseEnter={handleHover}
-            onMouseLeave={handleUnhover}
-          >
-            <div style={iconContainerStyle}>
-              <Bell size={20} color="#374151" strokeWidth={2.2} />
-            </div>
-            <span style={menuItemTextStyle}>Notification</span>
-          </button>
+          {/* Notification - Visible ONLY when signed in */}
+          {profile && (
+            <button
+              onClick={() => setActiveSubModal('notifications')}
+              style={menuItemStyle}
+              onMouseEnter={handleHover}
+              onMouseLeave={handleUnhover}
+            >
+              <div style={iconContainerStyle}>
+                <Bell size={20} color="#374151" strokeWidth={2.2} />
+              </div>
+              <span style={menuItemTextStyle}>Notification</span>
+            </button>
+          )}
 
-          {/* Feedback */}
+          {/* Feedback - ALWAYS visible (Public feedback) */}
           <button
             onClick={() => setActiveSubModal('feedback')}
             style={menuItemStyle}
@@ -240,7 +296,7 @@ export const MoreModal: React.FC<MoreModalProps> = ({
             <span style={menuItemTextStyle}>Feedback</span>
           </button>
 
-          {/* Help */}
+          {/* Help - ALWAYS visible (Public 24/7 hotline & FAQ) */}
           <button
             onClick={() => setActiveSubModal('help')}
             style={menuItemStyle}
@@ -253,7 +309,7 @@ export const MoreModal: React.FC<MoreModalProps> = ({
             <span style={menuItemTextStyle}>Help</span>
           </button>
 
-          {/* Logout / Login */}
+          {/* Sign In / Register (when signed out) OR Logout (when signed in) */}
           {profile ? (
             <button
               onClick={onLogout}
@@ -262,9 +318,9 @@ export const MoreModal: React.FC<MoreModalProps> = ({
               onMouseLeave={handleUnhover}
             >
               <div style={iconContainerStyle}>
-                <LogOut size={20} color="#374151" strokeWidth={2.2} />
+                <LogOut size={20} color="#ef4444" strokeWidth={2.2} />
               </div>
-              <span style={menuItemTextStyle}>Logout</span>
+              <span style={{ ...menuItemTextStyle, color: '#ef4444' }}>Logout</span>
             </button>
           ) : (
             <button
@@ -276,7 +332,9 @@ export const MoreModal: React.FC<MoreModalProps> = ({
               <div style={iconContainerStyle}>
                 <LogOut size={20} color="var(--hc-green-primary)" strokeWidth={2.2} />
               </div>
-              <span style={{ ...menuItemTextStyle, color: 'var(--hc-green-primary)' }}>Sign In / Register</span>
+              <span style={{ ...menuItemTextStyle, color: 'var(--hc-green-primary)', fontWeight: 700 }}>
+                Sign In / Register
+              </span>
             </button>
           )}
 
