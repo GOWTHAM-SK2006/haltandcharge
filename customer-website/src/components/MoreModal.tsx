@@ -88,6 +88,46 @@ export const MoreModal: React.FC<MoreModalProps> = ({
         flexDirection: 'column',
         padding: '24px 20px 40px'
       }}>
+        {/* Top Header with Close Button */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: '16px',
+          paddingBottom: '8px'
+        }}>
+          <span style={{
+            fontSize: '13px',
+            fontWeight: 800,
+            color: 'var(--hc-green-primary)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.8px'
+          }}>
+            Account & Profile
+          </span>
+          <button
+            onClick={onClose}
+            title="Close"
+            style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '50%',
+              backgroundColor: '#f1f5f9',
+              border: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              color: '#64748b',
+              transition: 'all 0.15s ease'
+            }}
+            onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#e2e8f0')}
+            onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#f1f5f9')}
+          >
+            <X size={20} />
+          </button>
+        </div>
+
         {/* 1. Header: Shows User Profile IF SIGNED IN, or Sign In banner IF SIGNED OUT */}
         {profile ? (
           <>

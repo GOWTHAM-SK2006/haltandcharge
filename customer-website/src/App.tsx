@@ -32,6 +32,7 @@ export default function App() {
   const [selectedStation, setSelectedStation] = useState<Station | null>(null);
   const [showSearch, setShowSearch] = useState(false);
   const [showTripPlanner, setShowTripPlanner] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
   const [showWalletTopUp, setShowWalletTopUp] = useState(false);
   const [showActiveSessionModal, setShowActiveSessionModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -125,8 +126,12 @@ export default function App() {
   // Handle Tab Switch
   const handleTabChange = (tab: NavTab) => {
     setActiveNavTab(tab);
+    setShowProfileModal(false);
     if (tab === 'map') {
       setSelectedStation(null);
+      setShowTripPlanner(false);
+    } else if (tab === 'trip') {
+      setShowTripPlanner(true);
     }
   };
 
@@ -245,12 +250,17 @@ export default function App() {
         onOpenFilter={() => setShowSearch(true)}
       />
 
-      {/* 2. Top Floating Navigation Bar (Matches ZEON reference layout) */}
+      {/* 2. Top Floating Navigation Bar (Matches reference design) */}
       <TopBar
-        walletBalance={totalWalletBalance}
-        onOpenSearch={() => setShowSearch(true)}
-        onOpenTripPlanner={() => setShowTripPlanner(true)}
-        onOpenWallet={() => setShowWalletTopUp(true)}
+        onOpenSearch={() => {
+          setShowProfileModal(false);
+          setShowSearch(true);
+        }}
+        onOpenProfile={() => {
+          setShowSearch(false);
+          setShowTripPlanner(false);
+          setShowProfileModal(true);
+        }}
       />
 
       {/* 3. Bottom Navigation Bar */}
@@ -285,14 +295,18 @@ export default function App() {
       )}
 
       {/* 6. Trip Planner Modal */}
-      {showTripPlanner && (
+      {(showTripPlanner || activeNavTab === 'trip') && (
         <TripPlannerModal
           stations={stations}
           onSelectStation={st => {
             setSelectedStation(st);
             setShowTripPlanner(false);
+            setActiveNavTab('map');
           }}
-          onClose={() => setShowTripPlanner(false)}
+          onClose={() => {
+            setShowTripPlanner(false);
+            setActiveNavTab('map');
+          }}
         />
       )}
 
@@ -338,8 +352,8 @@ export default function App() {
         />
       )}
 
-      {/* 10. More / Account Menu Modal */}
-      {activeNavTab === 'more' && (
+      {/* 10. Profile & Account Modal (Opened by Circular Profile Icon) */}
+      {showProfileModal && (
         <MoreModal
           profile={profile}
           walletBalance={totalWalletBalance}
@@ -349,7 +363,7 @@ export default function App() {
           onOpenWallet={() => setShowWalletTopUp(true)}
           onOpenAuth={() => setShowAuthModal(true)}
           onLogout={handleLogout}
-          onClose={() => setActiveNavTab('map')}
+          onClose={() => setShowProfileModal(false)}
         />
       )}
 

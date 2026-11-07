@@ -1,7 +1,7 @@
 import React from 'react';
-import { Map, Car, Heart, Menu, Zap } from 'lucide-react';
+import { Map, Car, Heart, Route, Zap } from 'lucide-react';
 
-export type NavTab = 'map' | 'evs' | 'scan' | 'favourites' | 'more';
+export type NavTab = 'map' | 'evs' | 'scan' | 'favourites' | 'trip';
 
 interface BottomNavProps {
   activeTab: NavTab;
@@ -65,20 +65,20 @@ export const BottomNav: React.FC<BottomNavProps> = ({
         </div>
       )}
 
-      {/* Main Bottom Bar */}
+      {/* Main Bottom Bar - Matches Reference Image */}
       <nav style={{
         width: '100%',
         maxWidth: '540px',
-        height: '68px',
+        height: '70px',
         backgroundColor: '#ffffff',
-        borderTop: '1px solid var(--hc-border)',
+        borderTop: '1px solid #f1f5f9',
         boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.06)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-around',
-        padding: '0 12px',
-        borderTopLeftRadius: '20px',
-        borderTopRightRadius: '20px',
+        padding: '0 12px 6px',
+        borderTopLeftRadius: '24px',
+        borderTopRightRadius: '24px',
         pointerEvents: 'auto',
         position: 'relative'
       }}>
@@ -90,18 +90,25 @@ export const BottomNav: React.FC<BottomNavProps> = ({
             height: '100%',
             background: 'none',
             border: 'none',
+            outline: 'none',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
             gap: '3px',
             cursor: 'pointer',
-            color: activeTab === 'map' ? 'var(--hc-green-primary)' : 'var(--hc-text-muted)',
+            color: activeTab === 'map' ? '#059669' : '#64748b',
             transition: 'color 0.15s ease'
           }}
         >
-          <Map size={22} strokeWidth={activeTab === 'map' ? 2.5 : 2} />
-          <span style={{ fontSize: '11px', fontWeight: activeTab === 'map' ? 700 : 500 }}>Map</span>
+          <Map size={24} strokeWidth={activeTab === 'map' ? 2.5 : 2} />
+          <span style={{
+            fontSize: '11px',
+            fontWeight: activeTab === 'map' ? 700 : 500,
+            letterSpacing: '0.1px'
+          }}>
+            Map
+          </span>
         </button>
 
         {/* 2. My EVs */}
@@ -112,24 +119,31 @@ export const BottomNav: React.FC<BottomNavProps> = ({
             height: '100%',
             background: 'none',
             border: 'none',
+            outline: 'none',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
             gap: '3px',
             cursor: 'pointer',
-            color: activeTab === 'evs' ? 'var(--hc-green-primary)' : 'var(--hc-text-muted)',
+            color: activeTab === 'evs' ? '#059669' : '#64748b',
             transition: 'color 0.15s ease'
           }}
         >
-          <Car size={22} strokeWidth={activeTab === 'evs' ? 2.5 : 2} />
-          <span style={{ fontSize: '11px', fontWeight: activeTab === 'evs' ? 700 : 500 }}>My EVs</span>
+          <Car size={24} strokeWidth={activeTab === 'evs' ? 2.5 : 2} />
+          <span style={{
+            fontSize: '11px',
+            fontWeight: activeTab === 'evs' ? 700 : 500,
+            letterSpacing: '0.1px'
+          }}>
+            My EVs
+          </span>
         </button>
 
         {/* 3. Center Elevated Action Button: Scan */}
         <div style={{
           position: 'relative',
-          top: '-18px',
+          top: '-16px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -144,12 +158,13 @@ export const BottomNav: React.FC<BottomNavProps> = ({
               borderRadius: '50%',
               background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
               border: '4px solid #ffffff',
-              boxShadow: 'var(--hc-shadow-fab)',
+              boxShadow: '0 8px 24px rgba(5, 150, 105, 0.45)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
               color: '#ffffff',
+              outline: 'none',
               transition: 'transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1)'
             }}
             onMouseDown={e => (e.currentTarget.style.transform = 'scale(0.92)')}
@@ -160,7 +175,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           <span style={{
             fontSize: '11px',
             fontWeight: 700,
-            color: activeTab === 'scan' ? 'var(--hc-green-primary)' : 'var(--hc-text-secondary)',
+            color: activeTab === 'scan' ? '#059669' : '#1e293b',
             marginTop: '3px'
           }}>
             Scan
@@ -175,43 +190,56 @@ export const BottomNav: React.FC<BottomNavProps> = ({
             height: '100%',
             background: 'none',
             border: 'none',
+            outline: 'none',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
             gap: '3px',
             cursor: 'pointer',
-            color: activeTab === 'favourites' ? 'var(--hc-green-primary)' : 'var(--hc-text-muted)',
+            color: activeTab === 'favourites' ? '#059669' : '#64748b',
             transition: 'color 0.15s ease'
           }}
         >
-          <Heart size={22} strokeWidth={activeTab === 'favourites' ? 2.5 : 2} />
-          <span style={{ fontSize: '11px', fontWeight: activeTab === 'favourites' ? 700 : 500 }}>Favourites</span>
+          <Heart size={24} strokeWidth={activeTab === 'favourites' ? 2.5 : 2} />
+          <span style={{
+            fontSize: '11px',
+            fontWeight: activeTab === 'favourites' ? 700 : 500,
+            letterSpacing: '0.1px'
+          }}>
+            Favourites
+          </span>
         </button>
 
-        {/* 5. More */}
+        {/* 5. Trip */}
         <button
-          onClick={() => onTabChange('more')}
+          onClick={() => onTabChange('trip')}
           style={{
             flex: 1,
             height: '100%',
             background: 'none',
             border: 'none',
+            outline: 'none',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
             gap: '3px',
             cursor: 'pointer',
-            color: activeTab === 'more' ? 'var(--hc-green-primary)' : 'var(--hc-text-muted)',
+            color: activeTab === 'trip' ? '#059669' : '#64748b',
             transition: 'color 0.15s ease'
           }}
         >
-          <Menu size={22} strokeWidth={activeTab === 'more' ? 2.5 : 2} />
-          <span style={{ fontSize: '11px', fontWeight: activeTab === 'more' ? 700 : 500 }}>More</span>
+          <Route size={24} strokeWidth={activeTab === 'trip' ? 2.5 : 2} />
+          <span style={{
+            fontSize: '11px',
+            fontWeight: activeTab === 'trip' ? 700 : 500,
+            letterSpacing: '0.1px'
+          }}>
+            Trip
+          </span>
         </button>
       </nav>
     </div>
   );
 };
-

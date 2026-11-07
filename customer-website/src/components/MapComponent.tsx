@@ -189,113 +189,71 @@ export const MapComponent: React.FC<MapComponentProps> = ({
       {/* Map DOM Element */}
       <div ref={mapContainerRef} style={{ width: '100%', height: '100%' }} />
 
-      {/* Floating Map Controls - Bottom Left */}
+      {/* Floating Map Control - Bottom Left (Layers, matches reference) */}
       <div style={{
         position: 'absolute',
-        bottom: '96px',
+        bottom: '86px',
         left: '16px',
-        zIndex: 10,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '10px'
+        zIndex: 10
       }}>
-        {/* Layer Toggle */}
         <button
           onClick={() => setMapLayer(prev => prev === 'osm' ? 'hot' : 'osm')}
-          title="Toggle OpenStreetMap Style"
+          title="Toggle Map Style"
           style={{
-            width: '44px',
-            height: '44px',
+            width: '46px',
+            height: '46px',
             borderRadius: '50%',
             background: '#ffffff',
-            border: '1px solid var(--hc-border)',
-            boxShadow: 'var(--hc-shadow-md)',
+            border: '1px solid #e2e8f0',
+            boxShadow: '0 2px 10px rgba(0, 0, 0, 0.12)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: 'var(--hc-text-secondary)',
+            color: '#334155',
             cursor: 'pointer',
-            transition: 'all 0.15s ease'
+            transition: 'transform 0.15s ease, background-color 0.15s ease'
           }}
+          onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#f8fafc')}
+          onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#ffffff')}
         >
-          <Layers size={20} />
-        </button>
-
-        {/* Refresh Stations */}
-        <button
-          onClick={handleRefreshClick}
-          title="Refresh Stations"
-          style={{
-            width: '44px',
-            height: '44px',
-            borderRadius: '50%',
-            background: '#ffffff',
-            border: '1px solid var(--hc-border)',
-            boxShadow: 'var(--hc-shadow-md)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'var(--hc-text-secondary)',
-            cursor: 'pointer',
-            transition: 'all 0.15s ease'
-          }}
-        >
-          <RefreshCw size={20} style={{ animation: isRefreshing ? 'spin 0.8s linear infinite' : 'none' }} />
+          <Layers size={22} strokeWidth={2} />
         </button>
       </div>
 
-      {/* Floating Map Controls - Bottom Right */}
+      {/* Floating Map Control - Bottom Right (Locate Me Crosshair, matches reference) */}
       <div style={{
         position: 'absolute',
-        bottom: '96px',
+        bottom: '86px',
         right: '16px',
-        zIndex: 10,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '10px'
+        zIndex: 10
       }}>
-        {/* Locate Me */}
         <button
           onClick={handleLocateMe}
-          title="My Location"
+          title="Locate My Position"
           style={{
-            width: '44px',
-            height: '44px',
+            width: '46px',
+            height: '46px',
             borderRadius: '50%',
             background: '#ffffff',
-            border: '1px solid var(--hc-border)',
-            boxShadow: 'var(--hc-shadow-md)',
+            border: '1px solid #e2e8f0',
+            boxShadow: '0 2px 10px rgba(0, 0, 0, 0.12)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: 'var(--hc-green-primary)',
+            color: '#059669',
             cursor: 'pointer',
-            transition: 'all 0.15s ease'
+            transition: 'transform 0.15s ease, background-color 0.15s ease'
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.transform = 'scale(1.05)';
+            e.currentTarget.style.backgroundColor = '#ecfdf5';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.transform = 'scale(1)';
+            e.currentTarget.style.backgroundColor = '#ffffff';
           }}
         >
-          <Crosshair size={20} />
-        </button>
-
-        {/* Filter */}
-        <button
-          onClick={onOpenFilter}
-          title="Filter Chargers"
-          style={{
-            width: '44px',
-            height: '44px',
-            borderRadius: '50%',
-            background: '#ffffff',
-            border: '1px solid var(--hc-border)',
-            boxShadow: 'var(--hc-shadow-md)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'var(--hc-text-secondary)',
-            cursor: 'pointer',
-            transition: 'all 0.15s ease'
-          }}
-        >
-          <Filter size={20} />
+          <Crosshair size={22} strokeWidth={2.2} />
         </button>
       </div>
     </div>

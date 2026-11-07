@@ -1,18 +1,14 @@
 import React from 'react';
-import { Search, MapPin, AlertCircle, Wallet } from 'lucide-react';
+import { Search, User } from 'lucide-react';
 
 interface TopBarProps {
-  walletBalance: number;
   onOpenSearch: () => void;
-  onOpenTripPlanner: () => void;
-  onOpenWallet: () => void;
+  onOpenProfile: () => void;
 }
 
 export const TopBar: React.FC<TopBarProps> = ({
-  walletBalance,
   onOpenSearch,
-  onOpenTripPlanner,
-  onOpenWallet
+  onOpenProfile
 }) => {
   return (
     <div style={{
@@ -25,140 +21,74 @@ export const TopBar: React.FC<TopBarProps> = ({
       alignItems: 'center',
       justifyContent: 'space-between',
       gap: '12px',
-      pointerEvents: 'none' /* Children have pointerEvents: auto */
+      pointerEvents: 'none'
     }}>
-      {/* Search & Plan a Trip Pill (matches reference design) */}
-      <div style={{
-        flex: 1,
-        maxWidth: '480px',
-        height: '48px',
-        backgroundColor: '#ffffff',
-        borderRadius: '24px',
-        boxShadow: 'var(--hc-shadow-float)',
-        display: 'flex',
-        alignItems: 'center',
-        padding: '3px 6px',
-        border: '1px solid var(--hc-border)',
-        pointerEvents: 'auto'
-      }}>
-        {/* Search Option */}
-        <button
-          onClick={onOpenSearch}
-          style={{
-            flex: 1,
-            height: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px',
-            background: 'transparent',
-            border: 'none',
-            outline: 'none',
-            cursor: 'pointer',
-            fontSize: '15px',
-            fontWeight: 600,
-            color: 'var(--hc-text-primary)',
-            padding: '0 12px',
-            borderRadius: '20px',
-            transition: 'background-color 0.15s ease'
-          }}
-          onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'var(--hc-surface-subtle)')}
-          onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
-        >
-          <Search size={18} color="var(--hc-green-primary)" strokeWidth={2.2} />
-          <span>Search</span>
-        </button>
-
-        {/* Vertical Divider */}
-        <div style={{ width: '1px', height: '24px', backgroundColor: 'var(--hc-border)' }} />
-
-        {/* Plan a Trip Option */}
-        <button
-          onClick={onOpenTripPlanner}
-          style={{
-            flex: 1,
-            height: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px',
-            background: 'transparent',
-            border: 'none',
-            outline: 'none',
-            cursor: 'pointer',
-            fontSize: '15px',
-            fontWeight: 600,
-            color: 'var(--hc-text-primary)',
-            padding: '0 12px',
-            borderRadius: '20px',
-            transition: 'background-color 0.15s ease'
-          }}
-          onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'var(--hc-surface-subtle)')}
-          onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
-        >
-          <MapPin size={18} color="var(--hc-green-primary)" strokeWidth={2.2} />
-          <span>Plan a trip</span>
-        </button>
-      </div>
-
-      {/* Floating Wallet Balance (top right) */}
+      {/* Search Pill - Matches reference design */}
       <button
-        onClick={onOpenWallet}
-        title="View Wallet Balance & Top Up"
+        onClick={onOpenSearch}
+        title="Search charging stations"
         style={{
-          height: '42px',
-          backgroundColor: '#334155', /* High-contrast slate pill like reference */
-          color: '#ffffff',
-          borderRadius: '21px',
-          padding: '0 14px 0 10px',
+          flex: 1,
+          maxWidth: '480px',
+          height: '50px',
+          backgroundColor: '#ffffff',
+          borderRadius: '9999px',
+          boxShadow: '0 3px 12px rgba(0, 0, 0, 0.08)',
+          border: '1px solid #e2e8f0',
           display: 'flex',
           alignItems: 'center',
-          gap: '8px',
-          border: '1.5px solid rgba(255, 255, 255, 0.2)',
-          boxShadow: 'var(--hc-shadow-float)',
+          padding: '0 20px',
+          gap: '12px',
           cursor: 'pointer',
+          outline: 'none',
           pointerEvents: 'auto',
-          position: 'relative',
+          transition: 'all 0.15s ease'
+        }}
+        onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#f8fafc')}
+        onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#ffffff')}
+      >
+        <Search size={22} color="#059669" strokeWidth={2.4} />
+        <span style={{
+          fontSize: '16px',
+          fontWeight: 600,
+          color: '#1e293b',
+          letterSpacing: '-0.2px'
+        }}>
+          Search
+        </span>
+      </button>
+
+      {/* Circular Profile Button - Matches reference design */}
+      <button
+        onClick={onOpenProfile}
+        title="Account & Profile"
+        style={{
+          width: '50px',
+          height: '50px',
+          borderRadius: '50%',
+          backgroundColor: '#ffffff',
+          border: '2px solid #059669',
+          boxShadow: '0 3px 12px rgba(0, 0, 0, 0.08)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          outline: 'none',
+          pointerEvents: 'auto',
+          flexShrink: 0,
           transition: 'transform 0.15s ease, background-color 0.15s ease'
         }}
-        onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.03)')}
-        onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
+        onMouseEnter={e => {
+          e.currentTarget.style.transform = 'scale(1.05)';
+          e.currentTarget.style.backgroundColor = '#ecfdf5';
+        }}
+        onMouseLeave={e => {
+          e.currentTarget.style.transform = 'scale(1)';
+          e.currentTarget.style.backgroundColor = '#ffffff';
+        }}
       >
-        <div style={{
-          width: '26px',
-          height: '26px',
-          borderRadius: '50%',
-          backgroundColor: '#475569',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
-          <span style={{ fontSize: '13px', fontWeight: 700, color: '#ecfdf5' }}>₹</span>
-        </div>
-        <span style={{ fontSize: '14px', fontWeight: 700, letterSpacing: '0.2px' }}>
-          {Number(walletBalance || 0).toFixed(2)}
-        </span>
-
-        {/* Low balance alert icon badge */}
-        {(walletBalance || 0) <= 0 && (
-          <div style={{
-            position: 'absolute',
-            top: '-5px',
-            right: '-4px',
-            width: '18px',
-            height: '18px',
-            borderRadius: '50%',
-            backgroundColor: 'var(--hc-status-error)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            border: '2px solid #ffffff'
-          }}>
-            <AlertCircle size={10} color="#ffffff" strokeWidth={3} />
-          </div>
-        )}
+        <User size={24} color="#059669" strokeWidth={2.2} />
       </button>
     </div>
   );
 };
-

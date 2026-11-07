@@ -14,3 +14,4 @@ SET status = 'AVAILABLE'
 WHERE id NOT IN (
     SELECT charger_id FROM charging_sessions WHERE status = 'IN_PROGRESS'
 );
+
