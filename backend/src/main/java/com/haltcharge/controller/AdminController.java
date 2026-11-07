@@ -209,41 +209,17 @@ public class AdminController {
         Charger charger = chargerRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Charger not found with ID: " + id));
 
-        // Check if an active session already exists for this charger
-        Optional<ChargingSession> activeSessionOpt = sessionRepository.findActiveSessionByChargerId(id);
-        String sessionUid;
-        if (activeSessionOpt.isPresent()) {
-            sessionUid = activeSessionOpt.get().getSessionUid();
-        } else {
-            // Initiate a simulated session so virtual hardware generates live energy, power, and cost
-            sessionUid = "HC-SIM-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
-            ChargingSession s = new ChargingSession();
-            s.setSessionUid(sessionUid);
-            s.setUserId(1L); // Admin account
-            s.setStationId(charger.getStationId());
-            s.setChargerId(charger.getId());
-            s.setStatus("IN_PROGRESS");
-            s.setIsSimulated(true);
-            s.setTariffSnapshotPerKwh(charger.getTariffPerKwh() != null ? charger.getTariffPerKwh() : BigDecimal.valueOf(18.5));
-            s.setEnergyKwh(BigDecimal.ZERO);
-            s.setCurrentPowerKw(charger.getMaxPowerKw() != null ? charger.getMaxPowerKw() : BigDecimal.valueOf(120.0));
-            s.setEstimatedCost(BigDecimal.ZERO);
-            s.setDurationSeconds(0L);
-            s.setStartedAt(OffsetDateTime.now());
-            sessionRepository.save(s);
-        }
-
-        // Start simulator and update status
-        simulatorService.startCharging(charger.getId(), sessionUid, charger.getMaxPowerKw().doubleValue());
-        eventRepository.logEvent(id, "ADMIN_TURN_ON", "Admin turned charger ON (Simulator active for " + sessionUid + ")");
-        realtimeUpdateService.publishChargerStatus(id, charger.getIdentifier(), "CHARGING");
+        // Power hardware ON -> Sets status to AVAILABLE (Ready for customer QR scanning)
+        // No fake customer session is created. Real customers connect by scanning the QR code.
+        chargerRepository.updateStatus(id, "AVAILABLE");
+        eventRepository.logEvent(id, "ADMIN_TURN_ON", "Admin turned charger ON (Hardware online and AVAILABLE for customer QR scan)");
+        realtimeUpdateService.publishChargerStatus(id, charger.getIdentifier(), "AVAILABLE");
 
         return ResponseEntity.ok(Map.of(
                 "success", true,
                 "message", "Charger turned ON successfully",
                 "chargerId", id,
-                "sessionUid", sessionUid,
-                "status", "CHARGING"
+                "status", "AVAILABLE"
         ));
     }
 
@@ -252,24 +228,25 @@ public class AdminController {
         Charger charger = chargerRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Charger not found with ID: " + id));
 
-        // Safely complete any active session
+        // Safely complete any active customer charging session
         Optional<ChargingSession> activeSessionOpt = sessionRepository.findActiveSessionByChargerId(id);
         if (activeSessionOpt.isPresent()) {
             ChargingSession s = activeSessionOpt.get();
             sessionService.stopSession(s.getUserId(), s.getId(), "STOPPED_BY_ADMIN");
         } else {
             simulatorService.stopCharging(id, "ALL");
-            chargerRepository.updateStatus(id, "AVAILABLE");
-            realtimeUpdateService.publishChargerStatus(id, charger.getIdentifier(), "AVAILABLE");
         }
 
-        eventRepository.logEvent(id, "ADMIN_TURN_OFF", "Admin turned charger OFF (Simulator stopped safely)");
+        // Power hardware OFF -> Sets status to OFFLINE
+        chargerRepository.updateStatus(id, "OFFLINE");
+        eventRepository.logEvent(id, "ADMIN_TURN_OFF", "Admin turned charger OFF (Dispenser powered down)");
+        realtimeUpdateService.publishChargerStatus(id, charger.getIdentifier(), "OFFLINE");
 
         return ResponseEntity.ok(Map.of(
                 "success", true,
                 "message", "Charger turned OFF successfully",
                 "chargerId", id,
-                "status", "AVAILABLE"
+                "status", "OFFLINE"
         ));
     }
 

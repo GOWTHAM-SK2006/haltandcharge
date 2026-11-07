@@ -187,18 +187,23 @@ export const ChargersView: React.FC<ChargersViewProps> = ({
     {
       header: 'Connected Customer / Session',
       render: c => {
-        const activeSession = sessions.find(s => s.chargerId === c.id && s.status === 'IN_PROGRESS');
+        // Only genuine customer sessions, never admin
+        const activeSession = sessions.find(s => s.chargerId === c.id && s.status === 'IN_PROGRESS' && s.userEmail !== 'admin@haltcharge.com');
         if (!activeSession) {
           return (
             <span style={{ color: '#94a3b8', fontSize: '12px', fontStyle: 'italic' }}>
-              No customer connected (Idle)
+              {c.status === 'AVAILABLE' 
+                ? 'No customer connected (Waiting for QR scan)' 
+                : c.status === 'OFFLINE'
+                ? 'Charger Powered OFF'
+                : 'No customer connected (Idle)'}
             </span>
           );
         }
         return (
           <div style={{
-            background: '#f8fafc',
-            border: '1px solid #e2e8f0',
+            background: '#ecfdf5',
+            border: '1px solid #a7f3d0',
             borderRadius: '8px',
             padding: '6px 10px',
             fontSize: '11px',
@@ -207,17 +212,14 @@ export const ChargersView: React.FC<ChargersViewProps> = ({
             gap: '2px'
           }}>
             <div style={{ fontWeight: 700, color: '#0f172a' }}>
-              {activeSession.userEmail || `User #${activeSession.userId}`}
+              {activeSession.userEmail || `Customer #${activeSession.userId}`}
             </div>
             <div style={{ fontFamily: 'monospace', color: '#059669', fontSize: '10px' }}>
               {activeSession.sessionUid}
             </div>
-            <div style={{ color: '#475569', marginTop: '2px' }}>
+            <div style={{ color: '#047857', marginTop: '2px' }}>
               <strong>{activeSession.energyKwh?.toFixed(2) || '0.00'} kWh</strong> • {activeSession.currentPowerKw?.toFixed(1) || '0.0'} kW
               <span style={{ marginLeft: '4px', color: '#059669', fontWeight: 600 }}>₹{activeSession.estimatedCost?.toFixed(2) || '0.00'}</span>
-            </div>
-            <div style={{ fontSize: '9px', color: '#94a3b8', fontWeight: 600 }}>
-              [SIMULATED TELEMETRY]
             </div>
           </div>
         );
@@ -226,16 +228,18 @@ export const ChargersView: React.FC<ChargersViewProps> = ({
     {
       header: 'Controls & QR',
       render: c => {
+        const isOffline = c.status === 'OFFLINE';
+        const isAvailable = c.status === 'AVAILABLE';
         const isCharging = c.status === 'CHARGING';
         const isLoading = actionLoadingId === c.id;
 
         return (
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            {/* START/ON Control */}
+            {/* START/ON Control: Turns on hardware (sets to AVAILABLE) */}
             <button
               onClick={() => handleTurnOn(c.id)}
-              disabled={isCharging || isLoading}
-              title={isCharging ? "Charger is already running" : "Turn Charger ON (Start Simulator)"}
+              disabled={isAvailable || isCharging || isLoading}
+              title={isAvailable ? "Charger is already ON & Available" : "Turn Charger ON (Make Available for QR scan)"}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -243,23 +247,23 @@ export const ChargersView: React.FC<ChargersViewProps> = ({
                 padding: '5px 10px',
                 borderRadius: '6px',
                 border: '1px solid #a7f3d0',
-                background: isCharging ? '#f1f5f9' : '#ecfdf5',
-                color: isCharging ? '#94a3b8' : '#059669',
+                background: isAvailable || isCharging ? '#f1f5f9' : '#ecfdf5',
+                color: isAvailable || isCharging ? '#94a3b8' : '#059669',
                 fontSize: '11px',
                 fontWeight: 700,
-                cursor: isCharging || isLoading ? 'not-allowed' : 'pointer',
-                opacity: isCharging ? 0.6 : 1
+                cursor: isAvailable || isCharging || isLoading ? 'not-allowed' : 'pointer',
+                opacity: isAvailable || isCharging ? 0.6 : 1
               }}
             >
               <Power size={13} />
               <span>ON</span>
             </button>
 
-            {/* STOP/OFF Control */}
+            {/* STOP/OFF Control: Powers down hardware (sets to OFFLINE, safely stops active session) */}
             <button
               onClick={() => handleTurnOff(c.id)}
-              disabled={!isCharging || isLoading}
-              title={!isCharging ? "Charger is already idle" : "Turn Charger OFF (Safely Stop Simulator)"}
+              disabled={isOffline || isLoading}
+              title={isOffline ? "Charger is already OFF" : "Turn Charger OFF (Power down hardware)"}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -267,12 +271,12 @@ export const ChargersView: React.FC<ChargersViewProps> = ({
                 padding: '5px 10px',
                 borderRadius: '6px',
                 border: '1px solid #fecaca',
-                background: !isCharging ? '#f1f5f9' : '#fef2f2',
-                color: !isCharging ? '#94a3b8' : '#dc2626',
+                background: isOffline ? '#f1f5f9' : '#fef2f2',
+                color: isOffline ? '#94a3b8' : '#dc2626',
                 fontSize: '11px',
                 fontWeight: 700,
-                cursor: !isCharging || isLoading ? 'not-allowed' : 'pointer',
-                opacity: !isCharging ? 0.6 : 1
+                cursor: isOffline || isLoading ? 'not-allowed' : 'pointer',
+                opacity: isOffline ? 0.6 : 1
               }}
             >
               <Square size={13} />

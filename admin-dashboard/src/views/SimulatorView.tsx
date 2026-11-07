@@ -135,7 +135,10 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({
         }}>
           {chargers.map(c => {
             const isCharging = c.status === 'CHARGING';
-            const activeSession = sessions.find(s => s.chargerId === c.id && s.status === 'IN_PROGRESS');
+            const isAvailable = c.status === 'AVAILABLE';
+            const isOffline = c.status === 'OFFLINE';
+            // Only genuine customer sessions, never admin
+            const activeSession = sessions.find(s => s.chargerId === c.id && s.status === 'IN_PROGRESS' && s.userEmail !== 'admin@haltcharge.com');
 
             return (
               <div key={c.id} style={{
@@ -201,7 +204,7 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({
                     Speed: <strong>{c.maxPowerKw} kW ({c.chargerType})</strong> • Tariff: <strong>₹{c.tariffPerKwh}/kWh</strong>
                   </div>
 
-                  {/* Connected Customer & Live Metrics */}
+                  {/* Connected Customer & Live Metrics: Only shown when a real customer scans QR and charges */}
                   {activeSession ? (
                     <div style={{
                       background: '#ecfdf5',
@@ -215,11 +218,11 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({
                           CONNECTED CUSTOMER:
                         </span>
                         <span style={{ fontSize: '10px', background: '#d1fae5', color: '#047857', padding: '1px 5px', borderRadius: '4px', fontWeight: 700 }}>
-                          SIMULATED
+                          CHARGING ACTIVE
                         </span>
                       </div>
                       <div style={{ fontWeight: 700, fontSize: '12px', color: '#0f172a' }}>
-                        {activeSession.userEmail || `User #${activeSession.userId}`}
+                        {activeSession.userEmail || `Customer #${activeSession.userId}`}
                       </div>
                       <div style={{ fontSize: '11px', color: '#047857', fontFamily: 'monospace', marginTop: '2px' }}>
                         {activeSession.sessionUid}
@@ -232,8 +235,12 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({
                       </div>
                     </div>
                   ) : (
-                    <div style={{ fontSize: '11px', color: '#94a3b8', fontStyle: 'italic', marginBottom: '14px', padding: '6px 10px', background: '#f8fafc', borderRadius: '6px' }}>
-                      No active customer session. Charger is currently idle.
+                    <div style={{ fontSize: '11px', color: '#64748b', fontStyle: 'italic', marginBottom: '14px', padding: '10px 12px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                      {c.status === 'AVAILABLE'
+                        ? '● Powered ON • Waiting for customer to scan QR & start charging'
+                        : c.status === 'OFFLINE'
+                        ? '● Powered OFF • Click TURN ON to make available for customer QR scanning'
+                        : 'No customer connected (Idle)'}
                     </div>
                   )}
                 </div>
@@ -244,22 +251,23 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button
                       onClick={() => onTurnOn(c.id)}
-                      disabled={isCharging}
+                      disabled={isAvailable || isCharging}
+                      title={isAvailable ? "Charger is already ON & Available" : "Turn Charger ON (Make Available for QR scan)"}
                       style={{
                         flex: 1,
                         padding: '8px 12px',
-                        background: isCharging ? '#f1f5f9' : '#10b981',
+                        background: isAvailable || isCharging ? '#f1f5f9' : '#10b981',
                         border: 'none',
                         borderRadius: '8px',
-                        color: isCharging ? '#94a3b8' : '#ffffff',
+                        color: isAvailable || isCharging ? '#94a3b8' : '#ffffff',
                         fontSize: '12px',
                         fontWeight: 700,
-                        cursor: isCharging ? 'not-allowed' : 'pointer',
+                        cursor: isAvailable || isCharging ? 'not-allowed' : 'pointer',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: '6px',
-                        boxShadow: isCharging ? 'none' : '0 2px 6px rgba(16, 185, 129, 0.3)'
+                        boxShadow: isAvailable || isCharging ? 'none' : '0 2px 6px rgba(16, 185, 129, 0.3)'
                       }}
                     >
                       <Power size={14} />
@@ -268,22 +276,23 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({
 
                     <button
                       onClick={() => onTurnOff(c.id)}
-                      disabled={!isCharging}
+                      disabled={isOffline}
+                      title={isOffline ? "Charger is already OFF" : "Turn Charger OFF (Power down dispenser)"}
                       style={{
                         flex: 1,
                         padding: '8px 12px',
-                        background: !isCharging ? '#f1f5f9' : '#ef4444',
+                        background: isOffline ? '#f1f5f9' : '#ef4444',
                         border: 'none',
                         borderRadius: '8px',
-                        color: !isCharging ? '#94a3b8' : '#ffffff',
+                        color: isOffline ? '#94a3b8' : '#ffffff',
                         fontSize: '12px',
                         fontWeight: 700,
-                        cursor: !isCharging ? 'not-allowed' : 'pointer',
+                        cursor: isOffline ? 'not-allowed' : 'pointer',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: '6px',
-                        boxShadow: !isCharging ? 'none' : '0 2px 6px rgba(239, 68, 68, 0.3)'
+                        boxShadow: isOffline ? 'none' : '0 2px 6px rgba(239, 68, 68, 0.3)'
                       }}
                     >
                       <Square size={14} />

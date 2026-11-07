@@ -201,21 +201,21 @@ class HaltChargeBackendComprehensiveTests {
         assertNotNull(onResponse);
         assertEquals(200, onResponse.getStatusCode().value());
         assertEquals("Charger turned ON successfully", onResponse.getBody().get("message"));
-        assertEquals("CHARGING", onResponse.getBody().get("status"));
+        assertEquals("AVAILABLE", onResponse.getBody().get("status"));
 
         // Verify charger state in database
         Charger activeCharger = chargerRepository.findById(testChargerId).orElseThrow();
-        assertEquals("CHARGING", activeCharger.getStatus());
+        assertEquals("AVAILABLE", activeCharger.getStatus());
 
         // 2. Turn OFF Charger
         var offResponse = adminController.turnOffCharger(testChargerId);
         assertNotNull(offResponse);
         assertEquals(200, offResponse.getStatusCode().value());
         assertEquals("Charger turned OFF successfully", offResponse.getBody().get("message"));
-        assertEquals("AVAILABLE", offResponse.getBody().get("status"));
+        assertEquals("OFFLINE", offResponse.getBody().get("status"));
 
         // Verify restored state in database
         Charger idleCharger = chargerRepository.findById(testChargerId).orElseThrow();
-        assertEquals("AVAILABLE", idleCharger.getStatus());
+        assertEquals("OFFLINE", idleCharger.getStatus());
     }
 }
