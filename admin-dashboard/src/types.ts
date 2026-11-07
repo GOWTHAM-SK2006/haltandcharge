@@ -47,6 +47,7 @@ export interface ChargingSession {
   sessionUid: string;
   userId: number;
   userEmail?: string;
+  userName?: string;
   stationId: number;
   stationName?: string;
   chargerId: number;
@@ -75,6 +76,79 @@ export interface User {
   createdAt: string;
 }
 
+export interface Vehicle {
+  id: number;
+  user_id: number;
+  brand: string;
+  model: string;
+  license_plate: string;
+  battery_capacity_kwh: number;
+  connector_type: string;
+  max_charging_speed_kw: number;
+  is_default: boolean;
+  created_at: string;
+  user_name?: string;
+  user_email?: string;
+}
+
+export interface Booking {
+  id: number;
+  user_id: number;
+  station_id: number;
+  charger_id: number;
+  vehicle_id?: number;
+  start_time: string;
+  end_time: string;
+  status: string;
+  estimated_amount: number;
+  created_at: string;
+  user_name?: string;
+  user_email?: string;
+  station_name?: string;
+  station_city?: string;
+  charger_identifier?: string;
+  charger_name?: string;
+}
+
+export interface SupportTicket {
+  id: number;
+  user_id: number;
+  subject: string;
+  message: string;
+  status: string;
+  priority: string;
+  created_at: string;
+  updated_at?: string;
+  user_name?: string;
+  user_email?: string;
+}
+
+export interface NotificationItem {
+  id: number;
+  user_id?: number;
+  title: string;
+  body: string;
+  type: string;
+  is_read: boolean;
+  created_at: string;
+  user_name?: string;
+  user_email?: string;
+}
+
+export interface TransactionItem {
+  id: number;
+  reference: string;
+  user_id: number;
+  user_email: string;
+  user_name?: string;
+  station_name?: string;
+  amount: number;
+  transaction_type: string;
+  purpose: string;
+  session_status: string;
+  created_at: string;
+}
+
 export interface SimulatorEvent {
   id: number;
   charger_id: number;
@@ -87,13 +161,23 @@ export interface SimulatorEvent {
 
 export interface AuditLog {
   id: number;
-  user_id: number;
-  user_email: string;
+  user_id?: number;
+  user_email?: string;
   action: string;
   resource_type: string;
-  resource_id: string;
-  details: string;
-  ip_address: string;
+  resource_id?: string;
+  details?: string;
+  ip_address?: string;
   created_at: string;
 }
 
+export interface NetworkReport {
+  totalSessions: number;
+  totalEnergyKwh: number;
+  totalRevenue: number;
+  utilizationPercentage: number;
+  networkUptime: string;
+  avgSessionDurationMinutes: number;
+  activeChargers: number;
+  totalChargers: number;
+}

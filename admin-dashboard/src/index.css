@@ -4,14 +4,23 @@
   --bg-secondary: #ffffff;        /* Pure White - cards, sidebar, tables */
   --bg-card: #ffffff;             /* Pure White - metric cards */
   --bg-hover: #f1f5f9;            /* Slate 100 - active/hover menu items */
+  --bg-subtle: #f8fafc;           /* Light grey headers */
 
   /* Halt & Charge Green Accents */
   --accent-neon: #059669;         /* Emerald 600 - Main Brand Green */
   --accent-neon-glow: rgba(5, 150, 105, 0.2);
   --accent-emerald: #10b981;      /* Emerald 500 */
+  --accent-emerald-dark: #047857; /* Emerald 700 */
+  --accent-emerald-light: #ecfdf5;/* Emerald 50 */
+  --accent-emerald-border: #a7f3d0;/* Emerald 200 */
+
+  /* Secondary Accents */
   --accent-cyan: #0284c7;         /* Sky 600 */
   --accent-amber: #d97706;        /* Amber 600 */
+  --accent-amber-light: #fffbeb;  /* Amber 50 */
   --accent-red: #ef4444;          /* Red 500 */
+  --accent-red-light: #fef2f2;    /* Red 50 */
+  --accent-red-border: #fecaca;   /* Red 200 */
 
   /* High Contrast Typography */
   --text-primary: #0f172a;        /* Slate 900 - bold dark readable text */
@@ -47,6 +56,12 @@ body {
   animation: spin 1s linear infinite;
 }
 
+/* Table styles */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
 tbody tr {
   transition: background-color 0.15s ease;
 }
@@ -78,4 +93,66 @@ code, pre {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
+}
+
+/* Leaflet Map Pins & Custom Styles */
+.leaflet-container {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  background: #e2e8f0;
+}
+
+.hc-station-pin {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  border: 2px solid #ffffff;
+  transition: transform 0.15s ease;
+}
+
+.hc-station-pin:hover {
+  transform: scale(1.15);
+}
+
+.hc-pin-available {
+  background: #059669;
+}
+
+.hc-pin-busy {
+  background: #d97706;
+}
+
+.hc-pin-offline {
+  background: #64748b;
+}
+
+/* Modal backdrop blur */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+/* Button hover effects */
+button {
+  transition: all 0.15s ease;
+}
+
+button:active {
+  transform: scale(0.98);
 }
