@@ -75,3 +75,48 @@ export interface UserProfile {
   walletBalance: number;
 }
 
+export interface TripWaypoint {
+  name: string;
+  lat: number;
+  lng: number;
+}
+
+export interface RecommendedChargingStop {
+  station: Station;
+  matchedCharger: Charger;
+  atKm: number;
+  detourKm: number;
+  arrivalBatteryPercent: number;
+  chargeToBatteryPercent: number;
+  energyNeededKwh: number;
+  estimatedChargingMinutes: number;
+  estimatedCost: number;
+  isCompatible: boolean;
+  isAvailable: boolean;
+  status: string;
+}
+
+export interface TripRoutePlan {
+  id: string;
+  origin: TripWaypoint;
+  destination: TripWaypoint;
+  vehicleName: string;
+  batteryCapacityKwh: number;
+  startSoc: number;
+  reserveSoc: number;
+  routePreference: 'fastest' | 'shortest';
+  avoidTolls: boolean;
+  preferAvailable: boolean;
+  preferFastChargers: boolean;
+  totalDistanceKm: number;
+  totalDriveDurationMinutes: number;
+  totalChargingDurationMinutes: number;
+  totalEnergyUsedKwh: number;
+  arrivalBatteryPercent: number;
+  needsChargingHalt: boolean;
+  recommendedStops: RecommendedChargingStop[];
+  alternativeStops: Station[];
+  geometryCoordinates: [number, number][];
+  createdAt: string;
+}
+

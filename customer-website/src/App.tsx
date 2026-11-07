@@ -15,7 +15,7 @@ import { ActiveSessionModal } from './components/ActiveSessionModal';
 import { AuthModal } from './components/AuthModal';
 import { WalletTopUpModal } from './components/WalletTopUpModal';
 import { apiRequest } from './api';
-import { Station, Charger, Vehicle, ChargingSession, UserProfile } from './types';
+import { Station, Charger, Vehicle, ChargingSession, UserProfile, TripRoutePlan } from './types';
 
 export default function App() {
   const [token, setToken] = useState<string | null>(localStorage.getItem('hc_customer_token'));
@@ -45,6 +45,7 @@ export default function App() {
   const [showActiveSessionModal, setShowActiveSessionModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [scanInitialChargerId, setScanInitialChargerId] = useState<string | undefined>(undefined);
+  const [activeRoutePlan, setActiveRoutePlan] = useState<TripRoutePlan | null>(null);
 
   // User Coordinates (Default Bengaluru center)
   const [userLocation, setUserLocation] = useState({ lat: 12.9716, lng: 77.5946 });
@@ -378,6 +379,9 @@ export default function App() {
         onRefresh={fetchData}
         onOpenFilter={() => setShowFilterModal(true)}
         hasStationCard={hasFloatingStationCard}
+        activeRoute={activeRoutePlan}
+        onClearRoute={() => setActiveRoutePlan(null)}
+        onOpenTripPlanner={() => setShowTripPlanner(true)}
       />
 
       {/* 2. Top Floating Navigation Bar (Matches reference design) */}
@@ -456,6 +460,13 @@ export default function App() {
       {(showTripPlanner || activeNavTab === 'trip') && (
         <TripPlannerModal
           stations={stations}
+          vehicles={vehicles}
+          userLocation={userLocation}
+          activeRoute={activeRoutePlan}
+          onApplyRoute={plan => {
+            setActiveRoutePlan(plan);
+          }}
+          onClearRoute={() => setActiveRoutePlan(null)}
           onSelectStation={st => {
             setIsCardDismissed(false);
             setSelectedStation(st);
@@ -466,6 +477,7 @@ export default function App() {
             setShowTripPlanner(false);
             setActiveNavTab('map');
           }}
+          onStartChargeOnCharger={handleStartChargeOnCharger}
         />
       )}
 
