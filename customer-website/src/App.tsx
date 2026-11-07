@@ -4,6 +4,7 @@ import { TopBar, FilterCategory } from './components/TopBar';
 import { BottomNav, NavTab } from './components/BottomNav';
 import { StationCard } from './components/StationCard';
 import { StationDetailModal } from './components/StationDetailModal';
+import { FilterModal, FilterCriteria, defaultFilterCriteria, matchesFilterCriteria, countActiveFilters } from './components/FilterModal';
 import { SearchModal } from './components/SearchModal';
 import { TripPlannerModal } from './components/TripPlannerModal';
 import { MyEvsModal } from './components/MyEvsModal';
@@ -31,6 +32,8 @@ export default function App() {
   // Navigation, Filter & Modal States
   const [activeNavTab, setActiveNavTab] = useState<NavTab>('map');
   const [activeFilter, setActiveFilter] = useState<FilterCategory>('all');
+  const [filterCriteria, setFilterCriteria] = useState<FilterCriteria>(defaultFilterCriteria);
+  const [showFilterModal, setShowFilterModal] = useState(false);
   const [selectedStation, setSelectedStation] = useState<Station | null>(null);
   const [isCardDismissed, setIsCardDismissed] = useState(false);
   const [showFullStationModal, setShowFullStationModal] = useState(false);
@@ -128,19 +131,26 @@ export default function App() {
   // Wallet Balance calculation
   const totalWalletBalance = (profile?.walletBalance ?? 0) + localWalletOffset;
 
-  // Filter stations based on selected horizontal chip
+  // Total active filter count
+  const activeFiltersCount = countActiveFilters(filterCriteria);
+
+  // Filter stations based on horizontal chips AND full-panel criteria
   const filteredStations = stations.filter(station => {
+    // 1. Horizontal chip quick filter
     if (activeFilter === 'fast') {
-      return station.chargers?.some(c => c.chargerType === 'DC' && (c.maxPowerKw ?? 0) >= 50);
+      const isFast = station.chargers?.some(c => c.chargerType === 'DC' && (c.maxPowerKw ?? 0) >= 50);
+      if (!isFast) return false;
     }
     if (activeFilter === 'available') {
       const avail = (station.availableChargers ?? 0) > 0 || station.chargers?.some(c => c.status === 'AVAILABLE');
-      return avail && station.isActive;
+      if (!avail || !station.isActive) return false;
     }
     if (activeFilter === 'favourites') {
-      return favourites.some(f => f.id === station.id);
+      if (!favourites.some(f => f.id === station.id)) return false;
     }
-    return true;
+
+    // 2. Full-panel multi-category criteria
+    return matchesFilterCriteria(station, filterCriteria, vehicles, userLocation);
   });
 
   // Displayed station for bottom floating card
@@ -151,6 +161,7 @@ export default function App() {
   // Determine if floating station card should be visible
   const hasFloatingStationCard = activeNavTab === 'map' &&
     !showSearch &&
+    !showFilterModal &&
     !showTripPlanner &&
     !showProfileModal &&
     !showFavouritesModal &&
@@ -306,7 +317,7 @@ export default function App() {
         onMapClick={handleMapClick}
         userLocation={userLocation}
         onRefresh={fetchData}
-        onOpenFilter={() => setShowSearch(true)}
+        onOpenFilter={() => setShowFilterModal(true)}
         hasStationCard={hasFloatingStationCard}
       />
 
@@ -315,9 +326,15 @@ export default function App() {
         walletBalance={totalWalletBalance}
         activeFilter={activeFilter}
         onFilterChange={setActiveFilter}
+        activeFiltersCount={activeFiltersCount}
         onOpenSearch={() => {
           setShowProfileModal(false);
           setShowSearch(true);
+        }}
+        onOpenFilter={() => {
+          setShowProfileModal(false);
+          setShowSearch(false);
+          setShowFilterModal(true);
         }}
         onOpenProfile={() => {
           setShowSearch(false);
@@ -486,6 +503,21 @@ export default function App() {
             setShowWalletTopUp(false);
             setActiveNavTab('map');
           }}
+        />
+      )}
+
+      {/* 15. Advanced Multi-Category Full-Screen Filter Panel */}
+      {showFilterModal && (
+        <FilterModal
+          stations={stations}
+          vehicles={vehicles}
+          userLocation={userLocation}
+          initialCriteria={filterCriteria}
+          onApply={criteria => {
+            setFilterCriteria(criteria);
+            setIsCardDismissed(false);
+          }}
+          onClose={() => setShowFilterModal(false)}
         />
       )}
     </div>

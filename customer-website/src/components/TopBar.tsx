@@ -9,6 +9,8 @@ interface TopBarProps {
   onOpenSearch: () => void;
   onOpenProfile: () => void;
   onOpenWallet: () => void;
+  onOpenFilter?: () => void;
+  activeFiltersCount?: number;
   activeFilter: FilterCategory;
   onFilterChange: (filter: FilterCategory) => void;
 }
@@ -18,6 +20,8 @@ export const TopBar: React.FC<TopBarProps> = ({
   onOpenSearch,
   onOpenProfile,
   onOpenWallet,
+  onOpenFilter,
+  activeFiltersCount = 0,
   activeFilter,
   onFilterChange
 }) => {
@@ -239,7 +243,7 @@ export const TopBar: React.FC<TopBarProps> = ({
 
             {/* Filter Sliders Button with Notification Dot */}
             <button
-              onClick={onOpenSearch}
+              onClick={onOpenFilter || onOpenSearch}
               title="Filter Chargers"
               style={{
                 width: '46px',
@@ -261,17 +265,26 @@ export const TopBar: React.FC<TopBarProps> = ({
               onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
             >
               <SlidersHorizontal size={19} color="#059669" strokeWidth={2.2} />
-              {/* Red Notification Dot */}
+              {/* Red Notification Dot / Active Filter Count Badge */}
               <div style={{
                 position: 'absolute',
-                top: '9px',
-                right: '9px',
-                width: '7px',
-                height: '7px',
-                borderRadius: '50%',
+                top: activeFiltersCount > 0 ? '6px' : '9px',
+                right: activeFiltersCount > 0 ? '6px' : '9px',
+                minWidth: activeFiltersCount > 0 ? '16px' : '7px',
+                height: activeFiltersCount > 0 ? '16px' : '7px',
+                borderRadius: activeFiltersCount > 0 ? '8px' : '50%',
                 backgroundColor: '#ef4444',
-                border: '1.5px solid #ffffff'
-              }} />
+                color: '#ffffff',
+                fontSize: '10px',
+                fontWeight: 800,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: '1.5px solid #ffffff',
+                padding: activeFiltersCount > 0 ? '0 3px' : '0'
+              }}>
+                {activeFiltersCount > 0 ? activeFiltersCount : null}
+              </div>
             </button>
           </div>
         </div>
