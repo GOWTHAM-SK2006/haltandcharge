@@ -105,14 +105,22 @@ public class AdminController {
     }
 
     @PostMapping("/chargers")
-    public ResponseEntity<Charger> createCharger(@RequestBody ChargerDto.CreateChargerRequest req) {
+    public ResponseEntity<?> createCharger(@RequestBody ChargerDto.CreateChargerRequest req) {
+        Long stationId = req.getStationId();
+        if (stationId == null || stationRepository.findById(stationId).isEmpty()) {
+            List<Station> all = stationRepository.findAllAdmin();
+            if (all.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "No hub stations found. Please create a station first."));
+            }
+            stationId = all.get(0).getId();
+        }
         Charger c = new Charger();
-        c.setStationId(req.getStationId());
+        c.setStationId(stationId);
         c.setIdentifier(req.getIdentifier());
         c.setName(req.getName());
-        c.setChargerType(req.getChargerType());
-        c.setMaxPowerKw(req.getMaxPowerKw());
-        c.setTariffPerKwh(req.getTariffPerKwh());
+        c.setChargerType(req.getChargerType() != null ? req.getChargerType() : "DC");
+        c.setMaxPowerKw(req.getMaxPowerKw() != null ? req.getMaxPowerKw() : 120.0);
+        c.setTariffPerKwh(req.getTariffPerKwh() != null ? req.getTariffPerKwh() : 18.5);
         c.setStatus("AVAILABLE");
         c.setIsSimulated(req.getIsSimulated() != null ? req.getIsSimulated() : true);
         c.setIsActive(true);

@@ -60,7 +60,7 @@ export default function App() {
 
   const [showAddCharger, setShowAddCharger] = useState(false);
   const [newCharger, setNewCharger] = useState({
-    stationId: 1, identifier: 'HC-NEW-DC-01', name: 'UltraFast DC 120kW',
+    stationId: 0, identifier: 'HC-BLR-DC-01', name: 'UltraFast DC 120kW',
     chargerType: 'DC', maxPowerKw: 120, tariffPerKwh: 18.5, isSimulated: true
   });
 
@@ -147,6 +147,33 @@ export default function App() {
     }
   }, [token]);
 
+  useEffect(() => {
+    if (stations.length > 0) {
+      if (!newCharger.stationId || !stations.some(s => s.id === newCharger.stationId)) {
+        setNewCharger(prev => ({ ...prev, stationId: stations[0].id }));
+      }
+    }
+  }, [stations]);
+
+  const openAddCharger = () => {
+    if (stations.length === 0) {
+      alert('Please add a charging hub station first before deploying chargers.');
+      setShowAddStation(true);
+      return;
+    }
+    const targetStationId = stations.some(s => s.id === newCharger.stationId && newCharger.stationId > 0)
+      ? newCharger.stationId
+      : stations[0].id;
+
+    const prefix = stations.find(s => s.id === targetStationId)?.city?.slice(0, 3).toUpperCase() || 'BLR';
+    setNewCharger(prev => ({
+      ...prev,
+      stationId: targetStationId,
+      identifier: `HC-${prefix}-DC-0${chargers.length + 1}`
+    }));
+    setShowAddCharger(true);
+  };
+
   // Simulator controls
   const triggerSimulatorFault = async (id: number) => {
     try {
@@ -186,9 +213,20 @@ export default function App() {
   const handleCreateCharger = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const targetStationId = (stations.some(s => s.id === newCharger.stationId && newCharger.stationId > 0))
+        ? newCharger.stationId
+        : (stations[0]?.id || 0);
+
+      if (!targetStationId) {
+        alert('Please create a charging hub station first.');
+        setShowAddCharger(false);
+        setShowAddStation(true);
+        return;
+      }
+
       await apiRequest('/api/admin/chargers', {
         method: 'POST',
-        body: JSON.stringify(newCharger)
+        body: JSON.stringify({ ...newCharger, stationId: targetStationId })
       });
       setShowAddCharger(false);
       fetchData();
@@ -379,7 +417,7 @@ export default function App() {
           loading={loading}
           onRefresh={fetchData}
           onOpenAddStation={() => setShowAddStation(true)}
-          onOpenAddCharger={() => setShowAddCharger(true)}
+          onOpenAddCharger={openAddCharger}
           onOpenBroadcast={() => setShowBroadcastModal(true)}
         />
 
@@ -404,7 +442,7 @@ export default function App() {
         {activeTab === 'chargers' && (
           <ChargersView
             chargers={chargers}
-            onOpenAddCharger={() => setShowAddCharger(true)}
+            onOpenAddCharger={openAddCharger}
             onRefresh={fetchData}
           />
         )}
@@ -621,7 +659,7 @@ export default function App() {
                   <div>
                     <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#475569', marginBottom: '4px' }}>Assign Station</label>
                     <select
-                      value={newCharger.stationId}
+                      value={stations.some(s => s.id === newCharger.stationId) ? newCharger.stationId : (stations[0]?.id || '')}
                       onChange={e => setNewCharger({ ...newCharger, stationId: parseInt(e.target.value) })}
                       style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1.5px solid #e2e8f0', fontSize: '13px', background: '#ffffff', boxSizing: 'border-box' }}
                     >
