@@ -58,6 +58,12 @@ export const MoreModal: React.FC<MoreModalProps> = ({
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
   const [partnerSubmitted, setPartnerSubmitted] = useState(false);
 
+  // If authenticated as Admin, NEVER show the customer profile screen. Redirect to the real Admin Dashboard.
+  if (profile && (profile.role === 'ROLE_ADMIN' || profile.email === 'admin@haltcharge.com')) {
+    window.location.replace('/admin/');
+    return null;
+  }
+
   return (
     <div style={{
       position: 'fixed',

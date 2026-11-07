@@ -40,8 +40,22 @@ export default function App() {
   // User Coordinates (Default Bengaluru center)
   const [userLocation, setUserLocation] = useState({ lat: 12.9716, lng: 77.5946 });
 
-  // Try GPS Geolocation on mount
+  // Try GPS Geolocation & Authentication Router on mount
   useEffect(() => {
+    // 1. If an Admin is already authenticated in this browser, redirect to the real Admin Dashboard
+    const adminToken = localStorage.getItem('hc_admin_token');
+    const customerToken = localStorage.getItem('hc_customer_token');
+
+    if (adminToken && !customerToken) {
+      window.location.replace('/admin/');
+      return;
+    }
+
+    // 2. If no user is logged in at all, prompt Sign In immediately
+    if (!customerToken && !adminToken) {
+      setShowAuthModal(true);
+    }
+
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         pos => {
@@ -69,6 +83,17 @@ export default function App() {
         token ? apiRequest<ChargingSession>('/api/charging-sessions/active').catch(() => null) : Promise.resolve(null),
         token ? apiRequest<ChargingSession[]>('/api/charging-sessions').catch(() => []) : Promise.resolve([])
       ]);
+
+      // If the loaded profile belongs to an Admin, NEVER display the customer UI!
+      // Immediately transfer them to the official Admin Dashboard (/admin/)
+      if (prof && (prof.role === 'ROLE_ADMIN' || prof.email === 'admin@haltcharge.com')) {
+        if (token) {
+          localStorage.setItem('hc_admin_token', token);
+        }
+        localStorage.removeItem('hc_customer_token');
+        window.location.replace('/admin/');
+        return;
+      }
 
       setStations(stList);
       if (prof) setProfile(prof);
@@ -179,22 +204,26 @@ export default function App() {
   // Logout
   const handleLogout = () => {
     localStorage.removeItem('hc_customer_token');
+    localStorage.removeItem('hc_admin_token');
     setToken(null);
     setProfile(null);
     setActiveSession(null);
     setLocalWalletOffset(0);
+    setShowAuthModal(true);
   };
 
   // Auth Success
   const handleAuthSuccess = (newToken: string, role?: string) => {
     if (role === 'ROLE_ADMIN') {
       localStorage.setItem('hc_admin_token', newToken);
-      localStorage.setItem('hc_customer_token', newToken);
-      window.location.href = '/admin/';
+      localStorage.removeItem('hc_customer_token');
+      window.location.replace('/admin/');
       return;
     }
     localStorage.setItem('hc_customer_token', newToken);
+    localStorage.removeItem('hc_admin_token');
     setToken(newToken);
+    setShowAuthModal(false);
     fetchData();
   };
 

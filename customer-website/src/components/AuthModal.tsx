@@ -12,9 +12,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   onClose
 }) => {
   const [mode, setMode] = useState<'login' | 'register'>('login');
-  const [email, setEmail] = useState('admin@haltcharge.com');
+  const [email, setEmail] = useState('customer@haltcharge.com');
   const [password, setPassword] = useState('Password@123');
-  const [fullName, setFullName] = useState('Halt & Charge Admin');
+  const [fullName, setFullName] = useState('Customer');
   const [phone, setPhone] = useState('+91 9876543210');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -30,14 +30,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           body: JSON.stringify({ email, password })
         });
 
-        // If user is Admin, save token and immediately redirect to Admin Dashboard
-        if (res.role === 'ROLE_ADMIN' || res.email === 'admin@haltcharge.com') {
+        // If user is Admin, save admin token and immediately redirect to official Admin Dashboard
+        if (res.role === 'ROLE_ADMIN' || res.email === 'admin@haltcharge.com' || email.trim().toLowerCase() === 'admin@haltcharge.com') {
           localStorage.setItem('hc_admin_token', res.token);
-          localStorage.setItem('hc_customer_token', res.token);
-          window.location.href = '/admin/';
+          localStorage.removeItem('hc_customer_token');
+          window.location.replace('/admin/');
           return;
         }
 
+        localStorage.setItem('hc_customer_token', res.token);
+        localStorage.removeItem('hc_admin_token');
         onSuccess(res.token, res.role);
       } else {
         const res = await apiRequest<{ token: string; role?: string }>('/api/auth/register', {
@@ -49,6 +51,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             phoneNumber: phone
           })
         });
+        localStorage.setItem('hc_customer_token', res.token);
+        localStorage.removeItem('hc_admin_token');
         onSuccess(res.token, res.role);
       }
       onClose();

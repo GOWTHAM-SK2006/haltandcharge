@@ -85,6 +85,7 @@ export default function App() {
         throw new Error('Access denied. Administrator privileges required.');
       }
       localStorage.setItem('hc_admin_token', res.token);
+      localStorage.removeItem('hc_customer_token');
       setToken(res.token);
     } catch (err: any) {
       setAuthError(err.message || 'Authentication failed');
@@ -95,6 +96,7 @@ export default function App() {
 
   const handleLogout = () => {
     localStorage.removeItem('hc_admin_token');
+    localStorage.removeItem('hc_customer_token');
     setToken(null);
   };
 

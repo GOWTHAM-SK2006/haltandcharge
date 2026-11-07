@@ -408,3 +408,4 @@ export const ChargerQrModal: React.FC<ChargerQrModalProps> = ({
     </div>
   );
 };
+
