@@ -36,7 +36,7 @@ export const MapComponent: React.FC<MapComponentProps> = ({
 
     const map = L.map(mapContainerRef.current, {
       center: [initialLat, initialLng],
-      zoom: 12,
+      zoom: 13,
       zoomControl: false,
     });
 
@@ -120,7 +120,7 @@ export const MapComponent: React.FC<MapComponentProps> = ({
       const markerHtml = `
         <div class="hc-station-pin">
           <div class="hc-pin-bubble ${statusClass} ${selectedClass}">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#ffffff" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
               <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
             </svg>
           </div>
@@ -194,18 +194,19 @@ export const MapComponent: React.FC<MapComponentProps> = ({
         position: 'absolute',
         bottom: '92px',
         left: '16px',
-        zIndex: 10
+        zIndex: 900,
+        pointerEvents: 'auto'
       }}>
         <button
           onClick={() => setMapLayer(prev => prev === 'osm' ? 'hot' : 'osm')}
           title="Toggle Map Style"
           style={{
-            width: '46px',
-            height: '46px',
+            width: '48px',
+            height: '48px',
             borderRadius: '50%',
             background: '#ffffff',
             border: '1px solid #e2e8f0',
-            boxShadow: '0 4px 14px rgba(0, 0, 0, 0.12)',
+            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.15)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -225,18 +226,19 @@ export const MapComponent: React.FC<MapComponentProps> = ({
         position: 'absolute',
         bottom: '92px',
         right: '16px',
-        zIndex: 10
+        zIndex: 900,
+        pointerEvents: 'auto'
       }}>
         <button
           onClick={handleLocateMe}
           title="Locate My Position"
           style={{
-            width: '46px',
-            height: '46px',
+            width: '48px',
+            height: '48px',
             borderRadius: '50%',
             background: '#ffffff',
             border: '1px solid #e2e8f0',
-            boxShadow: '0 4px 14px rgba(0, 0, 0, 0.12)',
+            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.15)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -253,7 +255,7 @@ export const MapComponent: React.FC<MapComponentProps> = ({
             e.currentTarget.style.backgroundColor = '#ffffff';
           }}
         >
-          <Crosshair size={22} strokeWidth={2.2} />
+          <Crosshair size={22} strokeWidth={2.4} />
         </button>
       </div>
     </div>
