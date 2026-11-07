@@ -131,9 +131,22 @@ public class AdminController {
     // 4. User Management
     @GetMapping("/users")
     public ResponseEntity<List<User>> getAllUsers() {
-        List<User> users = userRepository.findAll();
+        List<User> users = userRepository.findAll().stream()
+                .filter(u -> !"ROLE_ADMIN".equalsIgnoreCase(u.getRole()) && !"admin@haltcharge.com".equalsIgnoreCase(u.getEmail()))
+                .collect(java.util.stream.Collectors.toList());
         users.forEach(u -> u.setPasswordHash(null));
         return ResponseEntity.ok(users);
+    }
+
+    @DeleteMapping("/users/{id}")
+    public ResponseEntity<Map<String, String>> deleteUser(@PathVariable Long id) {
+        User u = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+        if ("ROLE_ADMIN".equalsIgnoreCase(u.getRole()) || "admin@haltcharge.com".equalsIgnoreCase(u.getEmail())) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Cannot delete Administrator account"));
+        }
+        userRepository.deleteUserAndAllAssociatedData(id);
+        return ResponseEntity.ok(Map.of("message", "User " + u.getEmail() + " and all associated data deleted successfully"));
     }
 
     @PutMapping("/users/{id}/status")

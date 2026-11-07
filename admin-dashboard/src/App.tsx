@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, MapPin, Zap, Users, Activity, Sliders, ShieldAlert, 
   DollarSign, FileText, Settings, RefreshCw, LogOut, CheckCircle2, 
-  AlertTriangle, XCircle, PowerOff, Play, Shield
+  AlertTriangle, XCircle, PowerOff, Play, Shield, Trash2
 } from 'lucide-react';
 import { apiRequest } from './api';
 import { AdminStats, Station, Charger, ChargingSession, User, SimulatorEvent, AuditLog } from './types';
@@ -150,6 +150,19 @@ export default function App() {
       setShowAddCharger(false);
       fetchData();
     } catch (err: any) { alert(err.message); }
+  };
+
+  const handleDeleteUser = async (userId: number, name: string) => {
+    if (!window.confirm(`Are you sure you want to permanently delete user "${name}"?\n\nThis will permanently delete all their vehicles, charging history, and account data.`)) {
+      return;
+    }
+    try {
+      await apiRequest(`/api/admin/users/${userId}`, { method: 'DELETE' });
+      setUsers(prev => prev.filter(u => u.id !== userId));
+      fetchData();
+    } catch (err: any) {
+      alert(err.message || 'Failed to delete user');
+    }
   };
 
   // Render Login View if unauthenticated
@@ -813,7 +826,7 @@ export default function App() {
         {/* Tab 5: Users */}
         {activeTab === 'users' && (
           <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '24px' }}>
-            <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '16px' }}>Registered Customers & Admins</h3>
+            <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '16px' }}>Registered Customers</h3>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
               <thead>
                 <tr style={{ color: 'var(--text-secondary)', borderBottom: '1px solid var(--border-color)' }}>
@@ -823,30 +836,64 @@ export default function App() {
                   <th style={{ padding: '12px' }}>Role</th>
                   <th style={{ padding: '12px' }}>Status</th>
                   <th style={{ padding: '12px' }}>Simulated Wallet</th>
+                  <th style={{ padding: '12px', textAlign: 'right' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {users.map(u => (
-                  <tr key={u.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                    <td style={{ padding: '12px' }}>#{u.id}</td>
-                    <td style={{ padding: '12px', fontWeight: 600 }}>{u.fullName}</td>
-                    <td style={{ padding: '12px' }}>{u.email}</td>
-                    <td style={{ padding: '12px' }}><code>{u.role}</code></td>
-                    <td style={{ padding: '12px' }}>
-                      <span style={{
-                        padding: '4px 8px',
-                        borderRadius: '6px',
-                        fontSize: '11px',
-                        fontWeight: 700,
-                        background: u.status === 'ACTIVE' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                        color: u.status === 'ACTIVE' ? 'var(--accent-emerald)' : 'var(--accent-red)'
-                      }}>
-                        {u.status}
-                      </span>
+                {users.filter(u => u.role !== 'ROLE_ADMIN' && u.email !== 'admin@haltcharge.com').length === 0 ? (
+                  <tr>
+                    <td colSpan={7} style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                      No registered customers found.
                     </td>
-                    <td style={{ padding: '12px' }}>₹{Number(u.walletBalance).toFixed(2)}</td>
                   </tr>
-                ))}
+                ) : (
+                  users.filter(u => u.role !== 'ROLE_ADMIN' && u.email !== 'admin@haltcharge.com').map(u => (
+                    <tr key={u.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                      <td style={{ padding: '12px' }}>#{u.id}</td>
+                      <td style={{ padding: '12px', fontWeight: 600 }}>{u.fullName}</td>
+                      <td style={{ padding: '12px' }}>{u.email}</td>
+                      <td style={{ padding: '12px' }}><code>{u.role}</code></td>
+                      <td style={{ padding: '12px' }}>
+                        <span style={{
+                          padding: '4px 8px',
+                          borderRadius: '6px',
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          background: u.status === 'ACTIVE' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                          color: u.status === 'ACTIVE' ? 'var(--accent-emerald)' : 'var(--accent-red)'
+                        }}>
+                          {u.status}
+                        </span>
+                      </td>
+                      <td style={{ padding: '12px' }}>₹{Number(u.walletBalance).toFixed(2)}</td>
+                      <td style={{ padding: '12px', textAlign: 'right' }}>
+                        <button
+                          onClick={() => handleDeleteUser(u.id, u.fullName || u.email)}
+                          title="Permanently Delete User"
+                          style={{
+                            background: 'rgba(239, 68, 68, 0.15)',
+                            border: '1px solid rgba(239, 68, 68, 0.4)',
+                            color: '#ef4444',
+                            padding: '6px 12px',
+                            borderRadius: '6px',
+                            fontSize: '12px',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            transition: 'all 0.15s ease'
+                          }}
+                          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239, 68, 68, 0.3)')}
+                          onMouseLeave={e => (e.currentTarget.style.background = 'rgba(239, 68, 68, 0.15)')}
+                        >
+                          <Trash2 size={14} />
+                          <span>Delete</span>
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

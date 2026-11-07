@@ -131,5 +131,17 @@ public class UserRepository {
         Long c = jdbcClient.sql("SELECT count(*) FROM users").query(Long.class).single();
         return c != null ? c : 0L;
     }
+
+    @org.springframework.transaction.annotation.Transactional
+    public void deleteUserAndAllAssociatedData(Long userId) {
+        jdbcClient.sql("DELETE FROM favourites WHERE user_id = :userId").param("userId", userId).update();
+        jdbcClient.sql("DELETE FROM support_tickets WHERE user_id = :userId").param("userId", userId).update();
+        jdbcClient.sql("DELETE FROM notifications WHERE user_id = :userId").param("userId", userId).update();
+        jdbcClient.sql("DELETE FROM bookings WHERE user_id = :userId").param("userId", userId).update();
+        jdbcClient.sql("DELETE FROM charging_sessions WHERE user_id = :userId").param("userId", userId).update();
+        jdbcClient.sql("DELETE FROM vehicles WHERE user_id = :userId").param("userId", userId).update();
+        jdbcClient.sql("DELETE FROM audit_logs WHERE user_id = :userId").param("userId", userId).update();
+        jdbcClient.sql("DELETE FROM users WHERE id = :userId").param("userId", userId).update();
+    }
 }
 
