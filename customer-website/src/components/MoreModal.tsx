@@ -14,7 +14,6 @@ import {
   CreditCard,
   ShieldCheck,
   CheckCircle2,
-  ExternalLink,
   Phone,
   Mail,
   Send,
@@ -337,30 +336,6 @@ export const MoreModal: React.FC<MoreModalProps> = ({
               </span>
             </button>
           )}
-
-          {/* Admin Fleet Portal Shortcut */}
-          <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid #f1f5f9' }}>
-            <a
-              href="/admin/"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '12px 14px',
-                borderRadius: '12px',
-                backgroundColor: 'var(--hc-green-subtle)',
-                color: 'var(--hc-green-dark)',
-                textDecoration: 'none',
-                fontWeight: 700,
-                fontSize: '13px'
-              }}
-            >
-              <span>Switch to Admin Fleet Management</span>
-              <ExternalLink size={16} />
-            </a>
-          </div>
         </div>
       </div>
 
