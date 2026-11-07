@@ -235,7 +235,7 @@ export const MapComponent: React.FC<MapComponentProps> = ({
       {/* Floating Map Controls - Right Side (Layers, Compass/Navigation, Location Crosshair) */}
       <div style={{
         position: 'fixed',
-        bottom: hasStationCard ? '302px' : '98px',
+        bottom: hasStationCard ? '326px' : '98px',
         right: '16px',
         zIndex: 36,
         pointerEvents: 'auto',

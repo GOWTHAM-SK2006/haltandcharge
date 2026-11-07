@@ -31,7 +31,7 @@ export const StationCard: React.FC<StationCardProps> = ({
   return (
     <div style={{
       position: 'fixed',
-      bottom: '82px',
+      bottom: '106px',
       left: '12px',
       right: '12px',
       maxWidth: '540px',
@@ -309,3 +309,4 @@ export const StationCard: React.FC<StationCardProps> = ({
     </div>
   );
 };
+
