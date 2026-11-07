@@ -269,3 +269,4 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({
     </div>
   );
 };
+

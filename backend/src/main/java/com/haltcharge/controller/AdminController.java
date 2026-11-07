@@ -311,17 +311,17 @@ public class AdminController {
     // 14. Reports & Network Analytics
     @GetMapping("/reports")
     public ResponseEntity<Map<String, Object>> getReports() {
-        Long totalSessions = sessionRepository.count();
-        Double totalEnergy = sessionRepository.sumSimulatedEnergy();
-        Double totalRevenue = sessionRepository.sumSimulatedRevenue();
+        Long totalSessions = jdbcClient.sql("SELECT COUNT(*) FROM charging_sessions").query(Long.class).single();
+        java.math.BigDecimal totalEnergy = sessionRepository.sumSimulatedEnergy();
+        java.math.BigDecimal totalRevenue = sessionRepository.sumSimulatedRevenue();
         Long activeChargers = chargerRepository.countByStatus("CHARGING");
         Long totalChargers = chargerRepository.count();
         double utilization = totalChargers > 0 ? ((double) activeChargers / totalChargers) * 100.0 : 0.0;
 
         return ResponseEntity.ok(Map.of(
-            "totalSessions", totalSessions,
-            "totalEnergyKwh", totalEnergy != null ? totalEnergy : 0.0,
-            "totalRevenue", totalRevenue != null ? totalRevenue : 0.0,
+            "totalSessions", totalSessions != null ? totalSessions : 0L,
+            "totalEnergyKwh", totalEnergy != null ? totalEnergy.doubleValue() : 0.0,
+            "totalRevenue", totalRevenue != null ? totalRevenue.doubleValue() : 0.0,
             "utilizationPercentage", Math.round(utilization * 10.0) / 10.0,
             "networkUptime", "99.8%",
             "avgSessionDurationMinutes", 32,

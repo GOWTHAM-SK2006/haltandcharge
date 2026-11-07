@@ -169,3 +169,4 @@ export const TariffsView: React.FC<TariffsViewProps> = ({ chargers, onRefresh })
     </div>
   );
 };
+

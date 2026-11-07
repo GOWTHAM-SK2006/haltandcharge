@@ -172,3 +172,4 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ stats }) => {
     </div>
   );
 };
+

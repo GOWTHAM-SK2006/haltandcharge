@@ -152,3 +152,4 @@ export const LeafletNetworkMap: React.FC<LeafletNetworkMapProps> = ({
     </div>
   );
 };
+

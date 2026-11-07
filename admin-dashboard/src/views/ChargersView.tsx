@@ -210,3 +210,4 @@ export const ChargersView: React.FC<ChargersViewProps> = ({
     </div>
   );
 };
+

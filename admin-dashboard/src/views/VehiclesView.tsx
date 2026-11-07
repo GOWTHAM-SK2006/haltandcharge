@@ -111,3 +111,4 @@ export const VehiclesView: React.FC<VehiclesViewProps> = ({ vehicles }) => {
     </div>
   );
 };
+

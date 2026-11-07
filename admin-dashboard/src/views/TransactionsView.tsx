@@ -105,3 +105,4 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({ transactions
     </div>
   );
 };
+

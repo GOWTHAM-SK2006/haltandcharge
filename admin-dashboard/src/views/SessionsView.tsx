@@ -117,3 +117,4 @@ export const SessionsView: React.FC<SessionsViewProps> = ({ sessions }) => {
     </div>
   );
 };
+

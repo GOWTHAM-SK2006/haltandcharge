@@ -169,3 +169,4 @@ export const SupportView: React.FC<SupportViewProps> = ({ tickets, onRefresh }) 
     </div>
   );
 };
+
