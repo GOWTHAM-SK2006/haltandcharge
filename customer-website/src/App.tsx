@@ -534,6 +534,15 @@ export default function App() {
           favouritesCount={favourites.length}
           sessionHistory={sessionHistory}
           activeSession={activeSession}
+          vehicles={vehicles}
+          onOpenVehicles={() => {
+            setShowProfileModal(false);
+            setActiveNavTab('evs');
+          }}
+          onOpenTripPlanner={() => {
+            setShowProfileModal(false);
+            setShowTripPlanner(true);
+          }}
           onOpenActiveSession={() => setShowActiveSessionModal(true)}
           onOpenWallet={() => {
             setShowProfileModal(false);
@@ -544,6 +553,13 @@ export default function App() {
             setShowFavouritesModal(true);
           }}
           onOpenAuth={() => setShowAuthModal(true)}
+          onUpdateProfile={async (data) => {
+            await apiRequest('/api/me', {
+              method: 'PUT',
+              body: JSON.stringify(data)
+            });
+            fetchData();
+          }}
           onLogout={handleLogout}
           onClose={() => setShowProfileModal(false)}
         />
