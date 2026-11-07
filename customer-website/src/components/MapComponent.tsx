@@ -189,20 +189,24 @@ export const MapComponent: React.FC<MapComponentProps> = ({
       {/* Map DOM Element */}
       <div ref={mapContainerRef} style={{ width: '100%', height: '100%' }} />
 
-      {/* Floating Map Control - Bottom Left (Layers, matches reference) */}
+      {/* Floating Map Controls - Bottom Left (Layers & Refresh) */}
       <div style={{
         position: 'absolute',
-        bottom: '92px',
+        bottom: '108px',
         left: '16px',
         zIndex: 900,
-        pointerEvents: 'auto'
+        pointerEvents: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '10px'
       }}>
+        {/* Refresh Stations */}
         <button
-          onClick={() => setMapLayer(prev => prev === 'osm' ? 'hot' : 'osm')}
-          title="Toggle Map Style"
+          onClick={handleRefreshClick}
+          title="Refresh Stations"
           style={{
-            width: '48px',
-            height: '48px',
+            width: '46px',
+            height: '46px',
             borderRadius: '50%',
             background: '#ffffff',
             border: '1px solid #e2e8f0',
@@ -217,24 +221,48 @@ export const MapComponent: React.FC<MapComponentProps> = ({
           onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#f8fafc')}
           onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#ffffff')}
         >
-          <Layers size={22} strokeWidth={2} />
+          <RefreshCw size={20} style={{ animation: isRefreshing ? 'spin 0.8s linear infinite' : 'none' }} />
+        </button>
+
+        {/* Toggle Layers */}
+        <button
+          onClick={() => setMapLayer(prev => prev === 'osm' ? 'hot' : 'osm')}
+          title="Toggle Map Style"
+          style={{
+            width: '46px',
+            height: '46px',
+            borderRadius: '50%',
+            background: '#ffffff',
+            border: '1px solid #e2e8f0',
+            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.15)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#334155',
+            cursor: 'pointer',
+            transition: 'transform 0.15s ease, background-color 0.15s ease'
+          }}
+          onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#f8fafc')}
+          onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#ffffff')}
+        >
+          <Layers size={20} strokeWidth={2} />
         </button>
       </div>
 
-      {/* Floating Map Control - Bottom Right (Locate Me Crosshair, matches reference) */}
+      {/* Floating Map Controls - Bottom Right (Current Location) */}
       <div style={{
         position: 'absolute',
-        bottom: '92px',
+        bottom: '108px',
         right: '16px',
         zIndex: 900,
         pointerEvents: 'auto'
       }}>
         <button
           onClick={handleLocateMe}
-          title="Locate My Position"
+          title="My Location"
           style={{
-            width: '48px',
-            height: '48px',
+            width: '46px',
+            height: '46px',
             borderRadius: '50%',
             background: '#ffffff',
             border: '1px solid #e2e8f0',

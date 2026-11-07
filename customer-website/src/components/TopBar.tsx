@@ -20,16 +20,16 @@ export const TopBar: React.FC<TopBarProps> = ({
       zIndex: 20,
       pointerEvents: 'none'
     }}>
-      {/* Dark Emerald Green Organic Curved Wave Header */}
+      {/* Compact Dark Emerald Green Curved Wave Header */}
       <div style={{
         position: 'relative',
         width: '100%',
-        minHeight: '112px',
+        minHeight: '74px',
         overflow: 'hidden'
       }}>
-        {/* SVG Curved Wave Background Matching Reference Image */}
+        {/* Sleek SVG Curved Wave Background */}
         <svg
-          viewBox="0 0 375 115"
+          viewBox="0 0 375 74"
           preserveAspectRatio="none"
           style={{
             position: 'absolute',
@@ -41,29 +41,29 @@ export const TopBar: React.FC<TopBarProps> = ({
           }}
         >
           <defs>
-            <linearGradient id="hcHeaderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <linearGradient id="hcHeaderGradCompact" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#022c22" />
               <stop offset="35%" stopColor="#064e3b" />
               <stop offset="70%" stopColor="#047857" />
               <stop offset="100%" stopColor="#059669" />
             </linearGradient>
-            <linearGradient id="hcGlowWave" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="rgba(5, 150, 105, 0.3)" />
-              <stop offset="50%" stopColor="rgba(16, 185, 129, 0.45)" />
-              <stop offset="100%" stopColor="rgba(34, 197, 94, 0.6)" />
+            <linearGradient id="hcGlowWaveCompact" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="rgba(5, 150, 105, 0.25)" />
+              <stop offset="50%" stopColor="rgba(16, 185, 129, 0.4)" />
+              <stop offset="100%" stopColor="rgba(34, 197, 94, 0.55)" />
             </linearGradient>
           </defs>
 
-          {/* Lower accent glow wave (creates organic dual-wave effect) */}
+          {/* Lower accent glow wave */}
           <path
-            d="M0,0 L375,0 L375,98 Q285,122 180,96 Q85,76 0,108 Z"
-            fill="url(#hcGlowWave)"
+            d="M0,0 L375,0 L375,64 Q285,78 180,62 Q85,48 0,68 Z"
+            fill="url(#hcGlowWaveCompact)"
           />
 
           {/* Main dark emerald wave */}
           <path
-            d="M0,0 L375,0 L375,84 Q290,116 170,84 Q75,62 0,92 Z"
-            fill="url(#hcHeaderGrad)"
+            d="M0,0 L375,0 L375,54 Q290,72 170,54 Q75,40 0,58 Z"
+            fill="url(#hcHeaderGradCompact)"
           />
         </svg>
 
@@ -71,7 +71,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         <div style={{
           position: 'relative',
           zIndex: 2,
-          padding: '14px 18px 24px 18px',
+          padding: '8px 16px 14px 16px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -82,19 +82,19 @@ export const TopBar: React.FC<TopBarProps> = ({
           <div style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '10px'
+            gap: '8px'
           }}>
             <div style={{
-              width: '40px',
-              height: '40px',
+              width: '34px',
+              height: '34px',
               borderRadius: '50%',
               backgroundColor: '#022c22',
-              border: '2px solid rgba(34, 197, 94, 0.6)',
+              border: '1.5px solid rgba(34, 197, 94, 0.6)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               overflow: 'hidden',
-              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.45)',
+              boxShadow: '0 2px 6px rgba(0, 0, 0, 0.35)',
               flexShrink: 0
             }}>
               <img
@@ -108,7 +108,7 @@ export const TopBar: React.FC<TopBarProps> = ({
               />
             </div>
             <div style={{
-              fontSize: '20px',
+              fontSize: '18px',
               fontWeight: 800,
               letterSpacing: '-0.3px',
               fontFamily: 'inherit',
@@ -124,12 +124,12 @@ export const TopBar: React.FC<TopBarProps> = ({
             onClick={onOpenProfile}
             title="Profile & Account"
             style={{
-              width: '42px',
-              height: '42px',
+              width: '36px',
+              height: '36px',
               borderRadius: '50%',
               backgroundColor: '#ffffff',
               border: 'none',
-              boxShadow: '0 4px 14px rgba(0, 0, 0, 0.25)',
+              boxShadow: '0 3px 10px rgba(0, 0, 0, 0.2)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -141,15 +141,15 @@ export const TopBar: React.FC<TopBarProps> = ({
             onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.06)')}
             onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
           >
-            <User size={22} color="#059669" strokeWidth={2.4} />
+            <User size={19} color="#059669" strokeWidth={2.4} />
           </button>
         </div>
       </div>
 
-      {/* Floating White Search Bar */}
+      {/* Floating White Search Bar - Shifted Higher Up */}
       <div style={{
-        padding: '0 16px',
-        marginTop: '-18px',
+        padding: '0 14px',
+        marginTop: '-12px',
         position: 'relative',
         zIndex: 5,
         pointerEvents: 'auto'
@@ -161,33 +161,33 @@ export const TopBar: React.FC<TopBarProps> = ({
             width: '100%',
             maxWidth: '560px',
             margin: '0 auto',
-            height: '52px',
+            height: '46px',
             backgroundColor: '#ffffff',
             borderRadius: '9999px',
-            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.06)',
-            border: '1px solid rgba(226, 232, 240, 0.85)',
+            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.05)',
+            border: '1px solid rgba(226, 232, 240, 0.9)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            padding: '0 18px',
+            padding: '0 16px',
             cursor: 'pointer',
             outline: 'none',
             transition: 'box-shadow 0.15s ease'
           }}
-          onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 10px 28px rgba(0, 0, 0, 0.16)')}
-          onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.06)')}
+          onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.16)')}
+          onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.05)')}
         >
           {/* Left: Green Search Icon & Placeholder */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '12px',
+            gap: '10px',
             flex: 1,
             overflow: 'hidden'
           }}>
-            <Search size={20} color="#059669" strokeWidth={2.4} style={{ flexShrink: 0 }} />
+            <Search size={18} color="#059669" strokeWidth={2.4} style={{ flexShrink: 0 }} />
             <span style={{
-              fontSize: '14.5px',
+              fontSize: '13.5px',
               fontWeight: 500,
               color: '#475569',
               whiteSpace: 'nowrap',
@@ -207,7 +207,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             marginLeft: '8px',
             flexShrink: 0
           }}>
-            <SlidersHorizontal size={20} color="#059669" strokeWidth={2.2} />
+            <SlidersHorizontal size={18} color="#059669" strokeWidth={2.2} />
           </div>
         </button>
       </div>
