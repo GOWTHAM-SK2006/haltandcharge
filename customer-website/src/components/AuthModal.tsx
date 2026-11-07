@@ -12,10 +12,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   onClose
 }) => {
   const [mode, setMode] = useState<'login' | 'register'>('login');
-  const [email, setEmail] = useState('customer@haltcharge.com');
-  const [password, setPassword] = useState('Password@123');
-  const [fullName, setFullName] = useState('Customer');
-  const [phone, setPhone] = useState('+91 9876543210');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -133,7 +133,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         {/* Tab switch */}
         <div style={{ display: 'flex', borderBottom: '1px solid var(--hc-border)' }}>
           <button
-            onClick={() => setMode('login')}
+            onClick={() => {
+              setMode('login');
+              setEmail('');
+              setPassword('');
+              setError('');
+            }}
             style={{
               flex: 1,
               padding: '12px',
@@ -149,7 +154,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             Sign In
           </button>
           <button
-            onClick={() => setMode('register')}
+            onClick={() => {
+              setMode('register');
+              setEmail('');
+              setPassword('');
+              setFullName('');
+              setPhone('');
+              setError('');
+            }}
             style={{
               flex: 1,
               padding: '12px',
@@ -245,6 +257,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 type="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
+                placeholder="name@example.com"
+                autoComplete="email"
                 required
                 style={{ flex: 1, border: 'none', outline: 'none', fontSize: '14px' }}
               />
@@ -267,6 +281,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 type="password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                autoComplete="current-password"
                 required
                 style={{ flex: 1, border: 'none', outline: 'none', fontSize: '14px' }}
               />
