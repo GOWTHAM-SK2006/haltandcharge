@@ -69,16 +69,16 @@ export const BottomNav: React.FC<BottomNavProps> = ({
       <nav style={{
         width: '100%',
         maxWidth: '540px',
-        height: '70px',
+        height: '74px',
         backgroundColor: '#ffffff',
         borderTop: '1px solid #f1f5f9',
-        boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.06)',
+        boxShadow: '0 -4px 25px rgba(0, 0, 0, 0.08)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-around',
-        padding: '0 12px 6px',
-        borderTopLeftRadius: '24px',
-        borderTopRightRadius: '24px',
+        padding: '0 8px 6px',
+        borderTopLeftRadius: '28px',
+        borderTopRightRadius: '28px',
         pointerEvents: 'auto',
         position: 'relative'
       }}>
@@ -95,16 +95,26 @@ export const BottomNav: React.FC<BottomNavProps> = ({
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '3px',
             cursor: 'pointer',
-            color: activeTab === 'map' ? '#059669' : '#64748b',
-            transition: 'color 0.15s ease'
+            padding: '4px 0'
           }}
         >
-          <Map size={24} strokeWidth={activeTab === 'map' ? 2.5 : 2} />
+          <div style={{
+            backgroundColor: activeTab === 'map' ? '#ecfdf5' : 'transparent',
+            borderRadius: '16px',
+            padding: '4px 14px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'background-color 0.15s ease'
+          }}>
+            <Map size={24} color={activeTab === 'map' ? '#059669' : '#334155'} strokeWidth={activeTab === 'map' ? 2.5 : 2} />
+          </div>
           <span style={{
             fontSize: '11px',
             fontWeight: activeTab === 'map' ? 700 : 500,
+            color: activeTab === 'map' ? '#059669' : '#334155',
+            marginTop: '2px',
             letterSpacing: '0.1px'
           }}>
             Map
@@ -124,16 +134,26 @@ export const BottomNav: React.FC<BottomNavProps> = ({
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '3px',
             cursor: 'pointer',
-            color: activeTab === 'evs' ? '#059669' : '#64748b',
-            transition: 'color 0.15s ease'
+            padding: '4px 0'
           }}
         >
-          <Car size={24} strokeWidth={activeTab === 'evs' ? 2.5 : 2} />
+          <div style={{
+            backgroundColor: activeTab === 'evs' ? '#ecfdf5' : 'transparent',
+            borderRadius: '16px',
+            padding: '4px 14px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'background-color 0.15s ease'
+          }}>
+            <Car size={24} color={activeTab === 'evs' ? '#059669' : '#334155'} strokeWidth={activeTab === 'evs' ? 2.5 : 2} />
+          </div>
           <span style={{
             fontSize: '11px',
             fontWeight: activeTab === 'evs' ? 700 : 500,
+            color: activeTab === 'evs' ? '#059669' : '#334155',
+            marginTop: '2px',
             letterSpacing: '0.1px'
           }}>
             My EVs
@@ -156,7 +176,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
               width: '58px',
               height: '58px',
               borderRadius: '50%',
-              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+              background: 'linear-gradient(135deg, #10b981 0%, #059669 60%, #047857 100%)',
               border: '4px solid #ffffff',
               boxShadow: '0 8px 24px rgba(5, 150, 105, 0.45)',
               display: 'flex',
@@ -195,16 +215,26 @@ export const BottomNav: React.FC<BottomNavProps> = ({
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '3px',
             cursor: 'pointer',
-            color: activeTab === 'wallet' ? '#059669' : '#64748b',
-            transition: 'color 0.15s ease'
+            padding: '4px 0'
           }}
         >
-          <Wallet size={24} strokeWidth={activeTab === 'wallet' ? 2.5 : 2} />
+          <div style={{
+            backgroundColor: activeTab === 'wallet' ? '#ecfdf5' : 'transparent',
+            borderRadius: '16px',
+            padding: '4px 14px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'background-color 0.15s ease'
+          }}>
+            <Wallet size={24} color={activeTab === 'wallet' ? '#059669' : '#334155'} strokeWidth={activeTab === 'wallet' ? 2.5 : 2} />
+          </div>
           <span style={{
             fontSize: '11px',
             fontWeight: activeTab === 'wallet' ? 700 : 500,
+            color: activeTab === 'wallet' ? '#059669' : '#334155',
+            marginTop: '2px',
             letterSpacing: '0.1px'
           }}>
             Wallet
@@ -224,16 +254,26 @@ export const BottomNav: React.FC<BottomNavProps> = ({
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '3px',
             cursor: 'pointer',
-            color: activeTab === 'trip' ? '#059669' : '#64748b',
-            transition: 'color 0.15s ease'
+            padding: '4px 0'
           }}
         >
-          <Route size={24} strokeWidth={activeTab === 'trip' ? 2.5 : 2} />
+          <div style={{
+            backgroundColor: activeTab === 'trip' ? '#ecfdf5' : 'transparent',
+            borderRadius: '16px',
+            padding: '4px 14px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'background-color 0.15s ease'
+          }}>
+            <Route size={24} color={activeTab === 'trip' ? '#059669' : '#334155'} strokeWidth={activeTab === 'trip' ? 2.5 : 2} />
+          </div>
           <span style={{
             fontSize: '11px',
             fontWeight: activeTab === 'trip' ? 700 : 500,
+            color: activeTab === 'trip' ? '#059669' : '#334155',
+            marginTop: '2px',
             letterSpacing: '0.1px'
           }}>
             Trip

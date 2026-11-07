@@ -192,7 +192,7 @@ export const MapComponent: React.FC<MapComponentProps> = ({
       {/* Floating Map Control - Bottom Left (Layers, matches reference) */}
       <div style={{
         position: 'absolute',
-        bottom: '86px',
+        bottom: '92px',
         left: '16px',
         zIndex: 10
       }}>
@@ -205,7 +205,7 @@ export const MapComponent: React.FC<MapComponentProps> = ({
             borderRadius: '50%',
             background: '#ffffff',
             border: '1px solid #e2e8f0',
-            boxShadow: '0 2px 10px rgba(0, 0, 0, 0.12)',
+            boxShadow: '0 4px 14px rgba(0, 0, 0, 0.12)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -223,7 +223,7 @@ export const MapComponent: React.FC<MapComponentProps> = ({
       {/* Floating Map Control - Bottom Right (Locate Me Crosshair, matches reference) */}
       <div style={{
         position: 'absolute',
-        bottom: '86px',
+        bottom: '92px',
         right: '16px',
         zIndex: 10
       }}>
@@ -236,7 +236,7 @@ export const MapComponent: React.FC<MapComponentProps> = ({
             borderRadius: '50%',
             background: '#ffffff',
             border: '1px solid #e2e8f0',
-            boxShadow: '0 2px 10px rgba(0, 0, 0, 0.12)',
+            boxShadow: '0 4px 14px rgba(0, 0, 0, 0.12)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
