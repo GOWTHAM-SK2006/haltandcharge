@@ -119,8 +119,8 @@ public class AdminController {
         c.setIdentifier(req.getIdentifier());
         c.setName(req.getName());
         c.setChargerType(req.getChargerType() != null ? req.getChargerType() : "DC");
-        c.setMaxPowerKw(req.getMaxPowerKw() != null ? req.getMaxPowerKw() : 120.0);
-        c.setTariffPerKwh(req.getTariffPerKwh() != null ? req.getTariffPerKwh() : 18.5);
+        c.setMaxPowerKw(req.getMaxPowerKw() != null ? req.getMaxPowerKw() : java.math.BigDecimal.valueOf(120.0));
+        c.setTariffPerKwh(req.getTariffPerKwh() != null ? req.getTariffPerKwh() : java.math.BigDecimal.valueOf(18.5));
         c.setStatus("AVAILABLE");
         c.setIsSimulated(req.getIsSimulated() != null ? req.getIsSimulated() : true);
         c.setIsActive(true);
