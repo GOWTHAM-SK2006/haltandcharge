@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { CheckCircle2, X } from 'lucide-react';
 import { MapComponent } from './components/MapComponent';
 import { TopBar, FilterCategory } from './components/TopBar';
 import { BottomNav, NavTab } from './components/BottomNav';
@@ -19,6 +20,8 @@ import { Station, Charger, Vehicle, ChargingSession, UserProfile, TripRoutePlan 
 
 export default function App() {
   const [token, setToken] = useState<string | null>(localStorage.getItem('hc_customer_token'));
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [authNotice, setAuthNotice] = useState<string | undefined>(undefined);
 
   // App Data
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -135,28 +138,39 @@ export default function App() {
   // Fetch Data from Backend APIs
   const fetchData = async () => {
     try {
+      if (!token) {
+        // When unauthenticated, ONLY fetch public stations - completely wipe customer data
+        const stList = await apiRequest<Station[]>(`/api/stations?lat=${userLocation.lat}&lng=${userLocation.lng}`).catch(() => []);
+        setStations(stList);
+        setProfile(null);
+        setVehicles([]);
+        setFavourites([]);
+        setActiveSession(null);
+        setSessionHistory([]);
+        setLocalWalletOffset(0);
+        return;
+      }
+
       const [stList, prof, vehList, favs, actSes, sesHist] = await Promise.all([
         apiRequest<Station[]>(`/api/stations?lat=${userLocation.lat}&lng=${userLocation.lng}`).catch(() => []),
-        token ? apiRequest<UserProfile>('/api/me').catch(() => null) : Promise.resolve(null),
-        token ? apiRequest<Vehicle[]>('/api/vehicles').catch(() => []) : Promise.resolve([]),
-        token ? apiRequest<Station[]>('/api/me/favourites').catch(() => []) : Promise.resolve([]),
-        token ? apiRequest<ChargingSession>('/api/charging-sessions/active').catch(() => null) : Promise.resolve(null),
-        token ? apiRequest<ChargingSession[]>('/api/charging-sessions').catch(() => []) : Promise.resolve([])
+        apiRequest<UserProfile>('/api/me').catch(() => null),
+        apiRequest<Vehicle[]>('/api/vehicles').catch(() => []),
+        apiRequest<Station[]>('/api/me/favourites').catch(() => []),
+        apiRequest<ChargingSession>('/api/charging-sessions/active').catch(() => null),
+        apiRequest<ChargingSession[]>('/api/charging-sessions').catch(() => [])
       ]);
 
       // If the loaded profile belongs to an Admin, NEVER display the customer UI!
       // Immediately transfer them to the official Admin Dashboard (/admin/)
       if (prof && (prof.role === 'ROLE_ADMIN' || prof.email === 'admin@haltcharge.com')) {
-        if (token) {
-          localStorage.setItem('hc_admin_token', token);
-        }
+        localStorage.setItem('hc_admin_token', token);
         localStorage.removeItem('hc_customer_token');
         window.location.replace('/admin/');
         return;
       }
 
       setStations(stList);
-      if (prof) setProfile(prof);
+      setProfile(prof);
       setVehicles(vehList);
       setFavourites(favs);
       setActiveSession(actSes);
@@ -178,6 +192,57 @@ export default function App() {
     const interval = setInterval(fetchData, 3000);
     return () => clearInterval(interval);
   }, [token, userLocation]);
+
+  // Auto-dismiss toast notification after 4.5s
+  useEffect(() => {
+    if (toastMessage) {
+      const timer = setTimeout(() => setToastMessage(null), 4500);
+      return () => clearTimeout(timer);
+    }
+  }, [toastMessage]);
+
+  // Sync logout across tabs, prevent browser back from showing authenticated data, handle unauthorized
+  useEffect(() => {
+    const handlePopState = () => {
+      const currentToken = localStorage.getItem('hc_customer_token');
+      if (!currentToken) {
+        setToken(null);
+        setProfile(null);
+        setVehicles([]);
+        setFavourites([]);
+        setActiveSession(null);
+        setSessionHistory([]);
+        setLocalWalletOffset(0);
+        setShowProfileModal(false);
+        setShowFavouritesModal(false);
+        setShowWalletTopUp(false);
+        setShowActiveSessionModal(false);
+        setShowTripPlanner(false);
+        setActiveNavTab('map');
+        setShowAuthModal(true);
+      }
+    };
+
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'hc_customer_token' && !e.newValue) {
+        handleLogout(true);
+      }
+    };
+
+    const handleUnauthorized = () => {
+      handleLogout(true);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('hc_unauthorized', handleUnauthorized);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('hc_unauthorized', handleUnauthorized);
+    };
+  }, []);
 
   // Wallet Balance calculation
   const totalWalletBalance = (profile?.walletBalance ?? 0) + localWalletOffset;
@@ -224,13 +289,24 @@ export default function App() {
 
   // Handle Tab Switch
   const handleTabChange = (tab: NavTab) => {
+    if (tab === 'map') {
+      setActiveNavTab('map');
+      setShowProfileModal(false);
+      setShowFavouritesModal(false);
+      setShowTripPlanner(false);
+      setShowWalletTopUp(false);
+      return;
+    }
+
+    if (!token) {
+      setShowAuthModal(true);
+      return;
+    }
+
     setActiveNavTab(tab);
     setShowProfileModal(false);
     setShowFavouritesModal(false);
-    if (tab === 'map') {
-      setShowTripPlanner(false);
-      setShowWalletTopUp(false);
-    } else if (tab === 'trip') {
+    if (tab === 'trip') {
       setShowTripPlanner(true);
     } else if (tab === 'wallet') {
       setShowWalletTopUp(true);
@@ -270,6 +346,12 @@ export default function App() {
 
   // Start Charging on a specific charger
   const handleStartChargeOnCharger = (charger: Charger) => {
+    if (!token) {
+      sessionStorage.setItem('hc_pending_scan', charger.identifier);
+      setScanInitialChargerId(charger.identifier);
+      setShowAuthModal(true);
+      return;
+    }
     setScanInitialChargerId(charger.identifier);
     setActiveNavTab('scan');
   };
@@ -277,6 +359,14 @@ export default function App() {
   // Start Charging from Station Card
   const handleStationStartCharge = (st: Station) => {
     const availableCharger = st.chargers?.find(c => c.status === 'AVAILABLE') || st.chargers?.[0];
+    if (!token) {
+      if (availableCharger) {
+        sessionStorage.setItem('hc_pending_scan', availableCharger.identifier);
+        setScanInitialChargerId(availableCharger.identifier);
+      }
+      setShowAuthModal(true);
+      return;
+    }
     if (availableCharger) {
       handleStartChargeOnCharger(availableCharger);
     } else {
@@ -326,14 +416,57 @@ export default function App() {
   };
 
   // Logout
-  const handleLogout = () => {
+  const handleLogout = async (showNotification = true) => {
+    // 1. Notify backend logout endpoint
+    try {
+      await apiRequest('/api/auth/logout', { method: 'POST' }).catch(() => {});
+    } catch {}
+
+    // 2. Permanently remove all tokens and auth session storage
     localStorage.removeItem('hc_customer_token');
     localStorage.removeItem('hc_admin_token');
+    sessionStorage.removeItem('hc_pending_scan');
+    sessionStorage.clear();
+
+    // 3. Immediately clear all customer state in React context/state
     setToken(null);
     setProfile(null);
+    setVehicles([]);
+    setFavourites([]);
     setActiveSession(null);
+    setSessionHistory([]);
     setLocalWalletOffset(0);
+    setSelectedStation(null);
+    setActiveRoutePlan(null);
+    setScanInitialChargerId(undefined);
+
+    // 4. Close all protected customer modals immediately
+    setShowProfileModal(false);
+    setShowFavouritesModal(false);
+    setShowWalletTopUp(false);
+    setShowActiveSessionModal(false);
+    setShowTripPlanner(false);
+    setShowFullStationModal(false);
+    setShowFilterModal(false);
+    setShowSearch(false);
+    setIsCardDismissed(false);
+    setActiveNavTab('map');
+    setActiveFilter('all');
+
+    // 5. Show toast notification "Logged out successfully"
+    if (showNotification) {
+      setToastMessage('Logged out successfully');
+      setAuthNotice('Logged out successfully. Enter your credentials to sign in.');
+    }
+
+    // 6. Redirect immediately to Sign In modal
     setShowAuthModal(true);
+
+    // 7. Update browser history to prevent Back button from restoring authenticated page
+    if (window.history && window.history.replaceState) {
+      window.history.replaceState({ loggedOut: true }, document.title, '/');
+      window.history.pushState({ loggedOut: true }, document.title, '/#/login');
+    }
   };
 
   // Auth Success
@@ -348,6 +481,12 @@ export default function App() {
     localStorage.removeItem('hc_admin_token');
     setToken(newToken);
     setShowAuthModal(false);
+    setAuthNotice(undefined);
+    setToastMessage('Signed in successfully');
+
+    if (window.history && window.history.replaceState) {
+      window.history.replaceState({}, document.title, '/');
+    }
 
     // Check if there was a pending QR scan waiting for authentication
     const pendingScan = sessionStorage.getItem('hc_pending_scan') || scanInitialChargerId;
@@ -387,8 +526,15 @@ export default function App() {
       {/* 2. Top Floating Navigation Bar (Matches reference design) */}
       <TopBar
         walletBalance={totalWalletBalance}
+        isAuthenticated={!!token}
         activeFilter={activeFilter}
-        onFilterChange={setActiveFilter}
+        onFilterChange={f => {
+          if (f === 'favourites' && !token) {
+            setShowAuthModal(true);
+            return;
+          }
+          setActiveFilter(f);
+        }}
         activeFiltersCount={activeFiltersCount}
         onOpenSearch={() => {
           setShowProfileModal(false);
@@ -400,11 +546,19 @@ export default function App() {
           setShowFilterModal(true);
         }}
         onOpenProfile={() => {
+          if (!token) {
+            setShowAuthModal(true);
+            return;
+          }
           setShowSearch(false);
           setShowTripPlanner(false);
           setShowProfileModal(true);
         }}
         onOpenWallet={() => {
+          if (!token) {
+            setShowAuthModal(true);
+            return;
+          }
           setShowProfileModal(false);
           setShowWalletTopUp(true);
         }}
@@ -577,8 +731,12 @@ export default function App() {
       {/* 13. Auth Sign In / Register Modal */}
       {showAuthModal && (
         <AuthModal
+          noticeMessage={authNotice}
           onSuccess={handleAuthSuccess}
-          onClose={() => setShowAuthModal(false)}
+          onClose={() => {
+            setShowAuthModal(false);
+            setAuthNotice(undefined);
+          }}
           pendingChargerId={scanInitialChargerId || sessionStorage.getItem('hc_pending_scan') || undefined}
         />
       )}
@@ -608,6 +766,50 @@ export default function App() {
           }}
           onClose={() => setShowFilterModal(false)}
         />
+      )}
+
+      {/* 16. Floating Toast Notification (Logged out successfully / Sign in notice) */}
+      {toastMessage && (
+        <div
+          className="animate-slide-up"
+          style={{
+            position: 'fixed',
+            top: '20px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 100,
+            backgroundColor: '#064e3b',
+            color: '#ffffff',
+            padding: '12px 20px',
+            borderRadius: '24px',
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.35)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            fontSize: '13.5px',
+            fontWeight: 700,
+            border: '1.5px solid #34d399',
+            backdropFilter: 'blur(8px)',
+            maxWidth: '92vw'
+          }}
+        >
+          <CheckCircle2 size={18} color="#34d399" style={{ flexShrink: 0 }} />
+          <span>{toastMessage}</span>
+          <button
+            onClick={() => setToastMessage(null)}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: '#d1fae5',
+              cursor: 'pointer',
+              marginLeft: '8px',
+              display: 'flex',
+              alignItems: 'center'
+            }}
+          >
+            <X size={15} />
+          </button>
+        </div>
       )}
     </div>
   );

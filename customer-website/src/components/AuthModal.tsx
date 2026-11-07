@@ -6,12 +6,14 @@ interface AuthModalProps {
   onSuccess: (token: string, role?: string) => void;
   onClose: () => void;
   pendingChargerId?: string;
+  noticeMessage?: string;
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({
   onSuccess,
   onClose,
-  pendingChargerId
+  pendingChargerId,
+  noticeMessage
 }) => {
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
@@ -131,6 +133,26 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <X size={18} />
           </button>
         </div>
+
+        {/* Notice Message Banner (e.g. Logged out successfully) */}
+        {noticeMessage && (
+          <div style={{
+            margin: '14px 20px 0',
+            padding: '12px 14px',
+            borderRadius: '12px',
+            backgroundColor: '#ecfdf5',
+            border: '1px solid #a7f3d0',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            color: '#065f46',
+            fontSize: '13px',
+            fontWeight: 600
+          }}>
+            <ShieldCheck size={18} color="#059669" style={{ flexShrink: 0 }} />
+            <span>{noticeMessage}</span>
+          </div>
+        )}
 
         {/* Pending Scanned Dispenser Alert Banner */}
         {pendingChargerId && (

@@ -6,6 +6,7 @@ export type FilterCategory = 'all' | 'fast' | 'available' | 'favourites';
 
 interface TopBarProps {
   walletBalance: number;
+  isAuthenticated?: boolean;
   onOpenSearch: () => void;
   onOpenProfile: () => void;
   onOpenWallet: () => void;
@@ -17,6 +18,7 @@ interface TopBarProps {
 
 export const TopBar: React.FC<TopBarProps> = ({
   walletBalance,
+  isAuthenticated = true,
   onOpenSearch,
   onOpenProfile,
   onOpenWallet,
@@ -144,7 +146,7 @@ export const TopBar: React.FC<TopBarProps> = ({
               {/* Wallet Pill */}
               <button
                 onClick={onOpenWallet}
-                title="View Wallet & Top Up"
+                title={isAuthenticated ? 'View Wallet & Top Up' : 'Sign in to access Wallet'}
                 style={{
                   height: '34px',
                   backgroundColor: 'rgba(6, 78, 59, 0.75)',
@@ -166,14 +168,14 @@ export const TopBar: React.FC<TopBarProps> = ({
               >
                 <Wallet size={14} color="#ffffff" strokeWidth={2.2} />
                 <span style={{ fontSize: '12.5px', fontWeight: 700, letterSpacing: '0.2px' }}>
-                  ₹ {Number(walletBalance || 0).toFixed(2)}
+                  {isAuthenticated ? `₹ ${Number(walletBalance || 0).toFixed(2)}` : 'Sign In'}
                 </span>
               </button>
 
               {/* Circular Profile Button */}
               <button
                 onClick={onOpenProfile}
-                title="Profile & Account"
+                title={isAuthenticated ? 'Profile & Account' : 'Sign In / Register'}
                 style={{
                   width: '36px',
                   height: '36px',

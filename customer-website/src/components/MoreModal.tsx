@@ -265,7 +265,7 @@ export const MoreModal: React.FC<MoreModalProps> = ({
                   {profile.fullName || 'Valued EV Driver'}
                 </h2>
                 <div style={{ fontSize: '13px', color: '#d1fae5', fontWeight: 600, marginTop: '2px' }}>
-                  {profile.phoneNumber || '+91 93636 24212'}
+                  {profile.phoneNumber || 'Phone not set'}
                 </div>
                 <div style={{ fontSize: '12px', color: '#a7f3d0', opacity: 0.9, marginTop: '1px' }}>
                   {profile.email}
@@ -1509,6 +1509,7 @@ export const MoreModal: React.FC<MoreModalProps> = ({
                 type="button"
                 onClick={() => {
                   setShowLogoutConfirm(false);
+                  onClose();
                   onLogout();
                 }}
                 style={{

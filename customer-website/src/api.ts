@@ -16,6 +16,12 @@ export async function apiRequest<T>(endpoint: string, options: RequestInit = {})
     headers,
   });
 
+  if (response.status === 401) {
+    localStorage.removeItem('hc_customer_token');
+    localStorage.removeItem('hc_admin_token');
+    window.dispatchEvent(new CustomEvent('hc_unauthorized'));
+  }
+
   if (!response.ok) {
     let errorMsg = `HTTP ${response.status}`;
     try {
