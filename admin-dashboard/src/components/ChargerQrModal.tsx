@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
-import { X, Download, Printer, Zap, CheckCircle2, MapPin } from 'lucide-react';
+import { X, Download, Printer, Zap, CheckCircle2, MapPin, Link as LinkIcon, ExternalLink } from 'lucide-react';
 import { Charger, Station } from '../types';
 
 interface ChargerQrModalProps {
@@ -16,25 +16,29 @@ export const ChargerQrModal: React.FC<ChargerQrModalProps> = ({
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
-  const [copied, setCopied] = useState(false);
+  const [copiedId, setCopiedId] = useState(false);
+  const [copiedUrl, setCopiedUrl] = useState(false);
 
-  // Encoded QR Payload containing exact Station, Charger ID, and Connector details
-  const qrPayload = JSON.stringify({
-    protocol: 'HALT_CHARGE_V1',
-    stationId: charger.stationId,
-    stationName: station?.name || 'Halt & Charge Station',
-    chargerId: charger.id,
-    identifier: charger.identifier,
-    connectorType: charger.chargerType === 'DC' ? 'DC Fast (CCS2)' : 'AC Standard (Type 2)',
-    maxPowerKw: charger.maxPowerKw,
-    tariffPerKwh: charger.tariffPerKwh
-  });
+  // Compute public Customer Website URL for Universal QR Code
+  // Standard phone camera scanner directly opens this URL in mobile browser without requiring any mobile app
+  const getCustomerWebUrl = (identifier: string): string => {
+    const origin = window.location.origin;
+    let baseUrl = origin;
+    if (origin.includes(':5174')) {
+      baseUrl = origin.replace(':5174', ':5173');
+    } else {
+      baseUrl = origin.replace(/\/admin.*$/, '');
+    }
+    return `${baseUrl}/scan/${encodeURIComponent(identifier)}`;
+  };
+
+  const qrWebUrl = getCustomerWebUrl(charger.identifier);
 
   useEffect(() => {
     if (canvasRef.current) {
       QRCode.toCanvas(
         canvasRef.current,
-        qrPayload,
+        qrWebUrl,
         {
           width: 240,
           margin: 2,
@@ -51,19 +55,19 @@ export const ChargerQrModal: React.FC<ChargerQrModalProps> = ({
         }
       );
     }
-  }, [qrPayload]);
+  }, [qrWebUrl]);
 
   // Download high-resolution placard
   const handleDownloadPlacard = () => {
     const printCanvas = document.createElement('canvas');
     printCanvas.width = 600;
-    printCanvas.height = 760;
+    printCanvas.height = 780;
     const ctx = printCanvas.getContext('2d');
     if (!ctx) return;
 
     // Card background
     ctx.fillStyle = '#ffffff';
-    ctx.roundRect(0, 0, 600, 760, 24);
+    ctx.roundRect(0, 0, 600, 780, 24);
     ctx.fill();
 
     // Top Green Header
@@ -80,25 +84,25 @@ export const ChargerQrModal: React.FC<ChargerQrModalProps> = ({
 
     ctx.font = '14px system-ui, sans-serif';
     ctx.fillStyle = '#a7f3d0';
-    ctx.fillText('OFFICIAL EV CHARGING DISPENSER PLACARD', 300, 78);
+    ctx.fillText('UNIVERSAL QR CHARGING PLACARD', 300, 78);
 
     // Station Name
     ctx.fillStyle = '#0f172a';
     ctx.font = 'bold 20px system-ui, sans-serif';
-    ctx.fillText(station?.name || 'Charging Station Hub', 300, 160);
+    ctx.fillText(station?.name || 'Charging Station Hub', 300, 155);
 
     ctx.fillStyle = '#64748b';
     ctx.font = '14px system-ui, sans-serif';
-    ctx.fillText(station?.address || 'Fast EV Network Hub', 300, 185);
+    ctx.fillText(station?.address || 'Fast EV Network Hub', 300, 180);
 
     // Draw QR Code
     if (canvasRef.current) {
-      ctx.drawImage(canvasRef.current, 180, 215, 240, 240);
+      ctx.drawImage(canvasRef.current, 180, 205, 240, 240);
     }
 
     // Charger Identifier Pill
     ctx.fillStyle = '#ecfdf5';
-    ctx.roundRect(140, 480, 320, 46, 10);
+    ctx.roundRect(140, 465, 320, 44, 10);
     ctx.fill();
     ctx.strokeStyle = '#a7f3d0';
     ctx.lineWidth = 2;
@@ -106,27 +110,36 @@ export const ChargerQrModal: React.FC<ChargerQrModalProps> = ({
 
     ctx.fillStyle = '#065f46';
     ctx.font = 'bold 20px monospace';
-    ctx.fillText(charger.identifier, 300, 510);
+    ctx.fillText(charger.identifier, 300, 495);
+
+    // Direct Web URL printed on placard
+    ctx.fillStyle = '#059669';
+    ctx.font = '12px monospace';
+    ctx.fillText(qrWebUrl, 300, 532);
 
     // Technical Details
     ctx.fillStyle = '#334155';
     ctx.font = '15px system-ui, sans-serif';
     const connLabel = charger.chargerType === 'DC' ? 'DC Fast (CCS2)' : 'AC Standard (Type 2)';
-    ctx.fillText(`Connector: ${connLabel} • Power: ${charger.maxPowerKw} kW`, 300, 560);
-    ctx.fillText(`Tariff: ₹${charger.tariffPerKwh}/kWh • Gun ID: #${charger.id}`, 300, 590);
+    ctx.fillText(`Connector: ${connLabel} • Power: ${charger.maxPowerKw} kW`, 300, 570);
+    ctx.fillText(`Tariff: ₹${charger.tariffPerKwh}/kWh • Gun ID: #${charger.id}`, 300, 598);
 
     // Instruction Banner
     ctx.fillStyle = '#f1f5f9';
-    ctx.roundRect(40, 630, 520, 80, 14);
+    ctx.roundRect(40, 630, 520, 105, 14);
     ctx.fill();
 
     ctx.fillStyle = '#059669';
     ctx.font = 'bold 16px system-ui, sans-serif';
-    ctx.fillText('SCAN WITH HALT & CHARGE APP TO CHARGE', 300, 665);
+    ctx.fillText('SCAN WITH ANY PHONE CAMERA TO CHARGE', 300, 665);
 
-    ctx.fillStyle = '#64748b';
-    ctx.font = '12px system-ui, sans-serif';
-    ctx.fillText('Point your browser camera to automatically connect & initiate charging session', 300, 690);
+    ctx.fillStyle = '#475569';
+    ctx.font = '13px system-ui, sans-serif';
+    ctx.fillText('Instantly opens web app • Auto detects charger • No app download', 300, 692);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px system-ui, sans-serif';
+    ctx.fillText('Works with iOS Camera, Android Camera, Google Lens & any QR scanner', 300, 715);
 
     // Trigger download
     const link = document.createElement('a');
@@ -140,10 +153,16 @@ export const ChargerQrModal: React.FC<ChargerQrModalProps> = ({
     window.print();
   };
 
-  const handleCopyPayload = () => {
+  const handleCopyId = () => {
     navigator.clipboard.writeText(charger.identifier);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setCopiedId(true);
+    setTimeout(() => setCopiedId(false), 2000);
+  };
+
+  const handleCopyUrl = () => {
+    navigator.clipboard.writeText(qrWebUrl);
+    setCopiedUrl(true);
+    setTimeout(() => setCopiedUrl(false), 2000);
   };
 
   return (
@@ -161,7 +180,7 @@ export const ChargerQrModal: React.FC<ChargerQrModalProps> = ({
       <div style={{
         backgroundColor: '#ffffff',
         borderRadius: '20px',
-        maxWidth: '480px',
+        maxWidth: '500px',
         width: '100%',
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
         overflow: 'hidden',
@@ -221,7 +240,7 @@ export const ChargerQrModal: React.FC<ChargerQrModalProps> = ({
 
         {/* Printable Placard Container */}
         <div id="printable-qr-placard" style={{
-          padding: '24px',
+          padding: '20px 24px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -230,7 +249,7 @@ export const ChargerQrModal: React.FC<ChargerQrModalProps> = ({
           {/* Station Placard Card */}
           <div style={{
             width: '100%',
-            maxWidth: '380px',
+            maxWidth: '390px',
             border: '2px solid #a7f3d0',
             borderRadius: '16px',
             overflow: 'hidden',
@@ -253,9 +272,9 @@ export const ChargerQrModal: React.FC<ChargerQrModalProps> = ({
             </div>
 
             {/* Station details */}
-            <div style={{ padding: '16px 16px 8px' }}>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#059669', fontSize: '12px', fontWeight: 700 }}>
-                <MapPin size={13} />
+            <div style={{ padding: '14px 16px 6px' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#059669', fontSize: '13px', fontWeight: 700 }}>
+                <MapPin size={14} />
                 <span>{station?.name || 'Charging Station'}</span>
               </div>
               <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>
@@ -265,10 +284,10 @@ export const ChargerQrModal: React.FC<ChargerQrModalProps> = ({
 
             {/* Canvas QR Container */}
             <div style={{
-              margin: '8px auto',
+              margin: '6px auto',
               display: 'flex',
               justifyContent: 'center',
-              padding: '8px'
+              padding: '6px'
             }}>
               <canvas
                 ref={canvasRef}
@@ -289,11 +308,23 @@ export const ChargerQrModal: React.FC<ChargerQrModalProps> = ({
                 color: '#065f46',
                 background: '#ecfdf5',
                 border: '1px solid #a7f3d0',
-                padding: '6px 12px',
+                padding: '6px 14px',
                 borderRadius: '8px',
                 display: 'inline-block'
               }}>
                 {charger.identifier}
+              </div>
+
+              {/* Public URL string */}
+              <div style={{
+                fontFamily: 'monospace',
+                fontSize: '10px',
+                color: '#059669',
+                marginTop: '6px',
+                wordBreak: 'break-all',
+                padding: '0 8px'
+              }}>
+                {qrWebUrl}
               </div>
 
               {/* Specs Pills */}
@@ -301,7 +332,7 @@ export const ChargerQrModal: React.FC<ChargerQrModalProps> = ({
                 display: 'grid',
                 gridTemplateColumns: '1fr 1fr',
                 gap: '8px',
-                marginTop: '12px',
+                marginTop: '10px',
                 fontSize: '11px'
               }}>
                 <div style={{ background: '#f8fafc', padding: '6px 8px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
@@ -314,7 +345,7 @@ export const ChargerQrModal: React.FC<ChargerQrModalProps> = ({
                 </div>
               </div>
 
-              <div style={{ marginTop: '10px', fontSize: '11px', color: '#047857', fontWeight: 600 }}>
+              <div style={{ marginTop: '8px', fontSize: '11px', color: '#047857', fontWeight: 600 }}>
                 Tariff: ₹{charger.tariffPerKwh}/kWh • Virtual Simulated Gun
               </div>
             </div>
@@ -323,50 +354,55 @@ export const ChargerQrModal: React.FC<ChargerQrModalProps> = ({
             <div style={{
               background: '#f8fafc',
               borderTop: '1px solid #f1f5f9',
-              padding: '8px 12px',
-              fontSize: '10px',
-              color: '#64748b',
-              fontWeight: 600
+              padding: '10px 12px',
+              fontSize: '11px',
+              color: '#059669',
+              fontWeight: 700
             }}>
-              SCAN WITH HALT & CHARGE APP TO START
+              SCAN WITH ANY PHONE CAMERA TO CHARGE
+              <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 400, marginTop: '2px' }}>
+                Opens browser web app instantly • No app install required
+              </div>
             </div>
           </div>
         </div>
 
         {/* Modal Action Buttons */}
         <div style={{
-          padding: '16px 24px',
+          padding: '14px 20px',
           borderTop: '1px solid #e2e8f0',
           background: '#f8fafc',
           display: 'flex',
-          gap: '10px',
-          justifyContent: 'space-between'
+          flexWrap: 'wrap',
+          gap: '8px',
+          justifyContent: 'space-between',
+          alignItems: 'center'
         }}>
-          <button
-            onClick={handleCopyPayload}
-            style={{
-              padding: '9px 14px',
-              borderRadius: '8px',
-              border: '1px solid #cbd5e1',
-              background: '#ffffff',
-              color: '#334155',
-              fontSize: '12px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px'
-            }}
-          >
-            {copied ? <CheckCircle2 size={14} color="#059669" /> : null}
-            <span>{copied ? 'Copied ID!' : 'Copy Identifier'}</span>
-          </button>
-
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div style={{ display: 'flex', gap: '6px' }}>
             <button
-              onClick={handleDownloadPlacard}
+              onClick={handleCopyId}
               style={{
-                padding: '9px 14px',
+                padding: '8px 12px',
+                borderRadius: '8px',
+                border: '1px solid #cbd5e1',
+                background: '#ffffff',
+                color: '#334155',
+                fontSize: '12px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px'
+              }}
+            >
+              {copiedId ? <CheckCircle2 size={13} color="#059669" /> : null}
+              <span>{copiedId ? 'Copied ID!' : 'Copy ID'}</span>
+            </button>
+
+            <button
+              onClick={handleCopyUrl}
+              style={{
+                padding: '8px 12px',
                 borderRadius: '8px',
                 border: '1px solid #a7f3d0',
                 background: '#ecfdf5',
@@ -376,17 +412,39 @@ export const ChargerQrModal: React.FC<ChargerQrModalProps> = ({
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '6px'
+                gap: '5px'
               }}
             >
-              <Download size={15} />
+              {copiedUrl ? <CheckCircle2 size={13} color="#059669" /> : <LinkIcon size={13} />}
+              <span>{copiedUrl ? 'Copied Web Link!' : 'Copy Web Link'}</span>
+            </button>
+          </div>
+
+          <div style={{ display: 'flex', gap: '6px' }}>
+            <button
+              onClick={handleDownloadPlacard}
+              style={{
+                padding: '8px 12px',
+                borderRadius: '8px',
+                border: '1px solid #cbd5e1',
+                background: '#ffffff',
+                color: '#059669',
+                fontSize: '12px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px'
+              }}
+            >
+              <Download size={14} />
               <span>Download PNG</span>
             </button>
 
             <button
               onClick={handlePrint}
               style={{
-                padding: '9px 16px',
+                padding: '8px 14px',
                 borderRadius: '8px',
                 border: 'none',
                 background: 'linear-gradient(135deg, #10b981, #059669)',
@@ -396,10 +454,10 @@ export const ChargerQrModal: React.FC<ChargerQrModalProps> = ({
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '6px'
+                gap: '5px'
               }}
             >
-              <Printer size={15} />
+              <Printer size={14} />
               <span>Print Placard</span>
             </button>
           </div>

@@ -5,11 +5,13 @@ import { apiRequest } from '../api';
 interface AuthModalProps {
   onSuccess: (token: string, role?: string) => void;
   onClose: () => void;
+  pendingChargerId?: string;
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({
   onSuccess,
-  onClose
+  onClose,
+  pendingChargerId
 }) => {
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
@@ -107,7 +109,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               {mode === 'login' ? 'Sign In to Halt & Charge' : 'Create Customer Account'}
             </h3>
             <p style={{ fontSize: '12px', color: 'var(--hc-text-muted)', marginTop: '2px' }}>
-              Enter your credentials to access your dashboard
+              {pendingChargerId ? `Sign in to activate dispenser ${pendingChargerId}` : 'Enter your credentials to access your dashboard'}
             </p>
           </div>
 
@@ -129,6 +131,27 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <X size={18} />
           </button>
         </div>
+
+        {/* Pending Scanned Dispenser Alert Banner */}
+        {pendingChargerId && (
+          <div style={{
+            margin: '14px 20px 0',
+            padding: '10px 14px',
+            borderRadius: '12px',
+            backgroundColor: '#ecfdf5',
+            border: '1px solid #a7f3d0',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            color: '#065f46',
+            fontSize: '12px'
+          }}>
+            <ShieldCheck size={18} color="#059669" style={{ flexShrink: 0 }} />
+            <div>
+              Scanned Dispenser: <strong>{pendingChargerId}</strong>. You will automatically return to start charging upon sign in.
+            </div>
+          </div>
+        )}
 
         {/* Tab switch */}
         <div style={{ display: 'flex', borderBottom: '1px solid var(--hc-border)' }}>

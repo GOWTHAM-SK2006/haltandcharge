@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
-import { X, QrCode, Zap, Car, Shield, CheckCircle2, AlertTriangle, Camera, Upload, RefreshCw } from 'lucide-react';
+import { X, QrCode, Zap, Car, Shield, CheckCircle2, AlertTriangle, Camera, Upload, RefreshCw, AlertCircle, MapPin, ArrowRight, LogIn } from 'lucide-react';
 import { Station, Charger, Vehicle } from '../types';
 
 interface ScanChargeModalProps {
@@ -17,11 +17,15 @@ interface DetectedChargerInfo {
   identifier: string;
   chargerId?: number;
   stationName?: string;
+  stationAddress?: string;
   stationId?: number;
   connectorType?: string;
   maxPowerKw?: number;
   tariffPerKwh?: number;
-  status: string;
+  status: string; // 'AVAILABLE' | 'CHARGING' | 'FAULTED' | 'OFFLINE' | 'UNKNOWN' | 'VERIFYING'
+  isValid: boolean;
+  isUnknown?: boolean;
+  errorReason?: string;
 }
 
 export const ScanChargeModal: React.FC<ScanChargeModalProps> = ({
@@ -33,7 +37,7 @@ export const ScanChargeModal: React.FC<ScanChargeModalProps> = ({
   isAuthenticated,
   onOpenAuth
 }) => {
-  const [isScanning, setIsScanning] = useState(true);
+  const [isScanning, setIsScanning] = useState(!selectedChargerId);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [detectedCharger, setDetectedCharger] = useState<DetectedChargerInfo | null>(null);
   const [vehicleId, setVehicleId] = useState<number | undefined>(vehicles[0]?.id);
@@ -44,23 +48,61 @@ export const ScanChargeModal: React.FC<ScanChargeModalProps> = ({
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Helper to resolve charger from identifier
-  const resolveCharger = (rawText: string): DetectedChargerInfo => {
-    let identifier = rawText.trim();
-    let parsedJson: any = null;
+  // Helper to extract clean charger identifier from URL, JSON, query params or raw string
+  const extractIdentifier = (rawText: string): string => {
+    let clean = (rawText || '').trim();
+    if (!clean) return '';
 
     try {
-      if (rawText.startsWith('{') && rawText.endsWith('}')) {
-        parsedJson = JSON.parse(rawText);
+      // 1. JSON payload: {"protocol":"HALT_CHARGE_V1","identifier":"..."}
+      if (clean.startsWith('{') && clean.endsWith('}')) {
+        const parsedJson = JSON.parse(clean);
         if (parsedJson.identifier) {
-          identifier = parsedJson.identifier;
+          return String(parsedJson.identifier).trim();
         }
-      } else if (rawText.includes('charger=')) {
-        const urlParams = new URLSearchParams(rawText.split('?')[1] || rawText);
-        identifier = urlParams.get('charger') || identifier;
+      }
+
+      // 2. URL Path: https://.../scan/IDENTIFIER or /scan/IDENTIFIER
+      const scanPathMatch = clean.match(/\/scan\/([a-zA-Z0-9\-_]+)/i);
+      if (scanPathMatch && scanPathMatch[1]) {
+        return decodeURIComponent(scanPathMatch[1]).trim();
+      }
+
+      // 3. URL Query Params: ?scan=IDENTIFIER or ?charger=IDENTIFIER
+      if (clean.includes('scan=') || clean.includes('charger=')) {
+        const queryPart = clean.includes('?') ? clean.split('?')[1] : clean;
+        const urlParams = new URLSearchParams(queryPart);
+        const p = urlParams.get('scan') || urlParams.get('charger');
+        if (p) return decodeURIComponent(p).trim();
+      }
+
+      // 4. URL without /scan/: e.g. https://domain.com/IDENTIFIER
+      if (clean.startsWith('http://') || clean.startsWith('https://')) {
+        const urlObj = new URL(clean);
+        const segments = urlObj.pathname.split('/').filter(Boolean);
+        if (segments.length > 0) {
+          return decodeURIComponent(segments[segments.length - 1]).trim();
+        }
       }
     } catch (e) {
-      // Use raw identifier
+      // fallback
+    }
+
+    return clean;
+  };
+
+  // Helper to resolve charger from identifier against real station data
+  const resolveCharger = (rawText: string): DetectedChargerInfo => {
+    const identifier = extractIdentifier(rawText);
+
+    if (!identifier || identifier.length < 2) {
+      return {
+        identifier: rawText,
+        isValid: false,
+        isUnknown: true,
+        status: 'UNKNOWN',
+        errorReason: 'Invalid QR Code format. Please scan an authentic Halt & Charge dispenser QR.'
+      };
     }
 
     // Lookup in network stations
@@ -68,7 +110,10 @@ export const ScanChargeModal: React.FC<ScanChargeModalProps> = ({
     let matchedStation: Station | undefined;
 
     for (const st of stations) {
-      const ch = st.chargers?.find(c => c.identifier.toLowerCase() === identifier.toLowerCase());
+      const ch = st.chargers?.find(
+        c => c.identifier.toLowerCase() === identifier.toLowerCase() ||
+             String(c.id) === identifier
+      );
       if (ch) {
         matchedCharger = ch;
         matchedStation = st;
@@ -81,26 +126,54 @@ export const ScanChargeModal: React.FC<ScanChargeModalProps> = ({
         identifier: matchedCharger.identifier,
         chargerId: matchedCharger.id,
         stationName: matchedStation.name,
+        stationAddress: `${matchedStation.address || ''}, ${matchedStation.city || ''}`,
         stationId: matchedStation.id,
         connectorType: matchedCharger.chargerType === 'DC' ? 'DC Fast (CCS2)' : 'AC Standard (Type 2)',
         maxPowerKw: matchedCharger.maxPowerKw,
         tariffPerKwh: matchedCharger.tariffPerKwh,
-        status: matchedCharger.status
+        status: matchedCharger.status,
+        isValid: true
       };
     }
 
-    // Fallback to QR parsed values if not in cached station list
+    // If stations have loaded from backend and no charger was found:
+    if (stations.length > 0) {
+      return {
+        identifier: identifier,
+        isValid: false,
+        isUnknown: true,
+        status: 'UNKNOWN',
+        errorReason: `Charger "${identifier}" could not be found on the Halt & Charge network. Please verify dispenser or scan again.`
+      };
+    }
+
+    // Stations still fetching from backend API
     return {
       identifier: identifier,
-      chargerId: parsedJson?.chargerId,
-      stationName: parsedJson?.stationName || 'Halt & Charge Station',
-      stationId: parsedJson?.stationId,
-      connectorType: parsedJson?.connectorType || 'DC Fast (CCS2)',
-      maxPowerKw: parsedJson?.maxPowerKw || 120.0,
-      tariffPerKwh: parsedJson?.tariffPerKwh || 18.5,
-      status: 'AVAILABLE'
+      isValid: true,
+      status: 'VERIFYING',
+      stationName: 'Resolving Station Details...',
+      connectorType: 'Detecting...',
+      maxPowerKw: 0,
+      tariffPerKwh: 0
     };
   };
+
+  // Re-resolve whenever selectedChargerId or stations list updates
+  useEffect(() => {
+    if (selectedChargerId) {
+      const resolved = resolveCharger(selectedChargerId);
+      setDetectedCharger(resolved);
+      setIsScanning(false);
+    }
+  }, [selectedChargerId, stations]);
+
+  // Keep vehicleId in sync when vehicles load
+  useEffect(() => {
+    if (vehicles.length > 0 && !vehicleId) {
+      setVehicleId(vehicles[0].id);
+    }
+  }, [vehicles]);
 
   const handleScanSuccess = async (decodedText: string) => {
     if (!decodedText) return;
@@ -150,7 +223,6 @@ export const ScanChargeModal: React.FC<ScanChargeModalProps> = ({
     };
 
     if (isScanning && !detectedCharger) {
-      // Small timeout to ensure DOM container is rendered
       const timer = setTimeout(startCamera, 300);
       return () => {
         clearTimeout(timer);
@@ -184,26 +256,30 @@ export const ScanChargeModal: React.FC<ScanChargeModalProps> = ({
   // Connect & Start Charging
   const handleConnectAndStart = async () => {
     if (!isAuthenticated) {
+      // Save pending scan before redirecting to login
+      if (detectedCharger?.identifier) {
+        sessionStorage.setItem('hc_pending_scan', detectedCharger.identifier);
+      }
       onOpenAuth();
       return;
     }
-    if (!detectedCharger) return;
+    if (!detectedCharger || !detectedCharger.isValid || detectedCharger.status !== 'AVAILABLE') return;
 
     setErrorMessage(null);
     setIsConnecting(true);
     try {
-      // 1. Establish session on backend
+      // Establish session on backend API
       await onStartCharging(detectedCharger.identifier, vehicleId);
 
-      // 2. Display "Charger Connected" success confirmation
+      // Display "Charger Connected" success confirmation
       setIsConnectedSuccess(true);
 
-      // 3. Briefly display confirmation before opening cockpit
+      // Brief animation before opening live charging cockpit
       setTimeout(() => {
         onClose();
       }, 1200);
     } catch (err: any) {
-      setErrorMessage(err.message || 'Failed to establish connection with charger');
+      setErrorMessage(err.message || 'Failed to establish connection with virtual charger');
       setIsConnecting(false);
     }
   };
@@ -217,13 +293,16 @@ export const ScanChargeModal: React.FC<ScanChargeModalProps> = ({
   };
 
   const isChargerAvailable = detectedCharger?.status === 'AVAILABLE';
+  const isChargerOccupied = detectedCharger?.status === 'CHARGING';
+  const isChargerOffline = detectedCharger?.status === 'FAULTED' || detectedCharger?.status === 'OFFLINE';
+  const isChargerUnknown = detectedCharger?.isUnknown || detectedCharger?.status === 'UNKNOWN';
 
   return (
     <div style={{
       position: 'fixed',
       inset: 0,
       zIndex: 50,
-      backgroundColor: 'rgba(15, 23, 42, 0.6)',
+      backgroundColor: 'rgba(15, 23, 42, 0.65)',
       backdropFilter: 'blur(6px)',
       display: 'flex',
       alignItems: 'flex-end',
@@ -257,23 +336,23 @@ export const ScanChargeModal: React.FC<ScanChargeModalProps> = ({
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <div style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '10px',
+                width: '38px',
+                height: '38px',
+                borderRadius: '12px',
                 backgroundColor: 'var(--hc-green-subtle)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: 'var(--hc-green-primary)'
               }}>
-                <QrCode size={20} />
+                <QrCode size={22} />
               </div>
               <div>
                 <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--hc-text-primary)' }}>
-                  Camera QR Scanner
+                  {detectedCharger ? 'EV Dispenser Detected' : 'Scan Charger QR Code'}
                 </h3>
                 <p style={{ fontSize: '12px', color: 'var(--hc-text-muted)' }}>
-                  Point browser camera at dispenser QR code
+                  {detectedCharger ? 'Verify dispenser specifications and confirm session' : 'Point camera at dispenser placard or upload QR'}
                 </p>
               </div>
             </div>
@@ -355,9 +434,9 @@ export const ScanChargeModal: React.FC<ScanChargeModalProps> = ({
                 <div style={{
                   position: 'absolute',
                   bottom: '12px',
-                  padding: '4px 12px',
+                  padding: '5px 12px',
                   borderRadius: '12px',
-                  backgroundColor: 'rgba(0,0,0,0.65)',
+                  backgroundColor: 'rgba(0,0,0,0.7)',
                   color: '#ffffff',
                   fontSize: '11px',
                   fontWeight: 600,
@@ -417,12 +496,12 @@ export const ScanChargeModal: React.FC<ScanChargeModalProps> = ({
                 onClick={() => fileInputRef.current?.click()}
                 style={{
                   width: '100%',
-                  padding: '10px',
+                  padding: '11px',
                   borderRadius: '12px',
                   border: '1px dashed #cbd5e1',
                   background: '#f8fafc',
                   color: '#475569',
-                  fontSize: '12px',
+                  fontSize: '13px',
                   fontWeight: 600,
                   display: 'flex',
                   alignItems: 'center',
@@ -431,40 +510,138 @@ export const ScanChargeModal: React.FC<ScanChargeModalProps> = ({
                   cursor: 'pointer'
                 }}
               >
-                <Upload size={14} />
-                <span>Upload QR Image / File from Device</span>
+                <Upload size={15} />
+                <span>Upload QR Image / Placard Snapshot</span>
               </button>
             </div>
           )}
 
-          {/* STATE 2: CHARGER DETECTED VIA SCAN */}
-          {detectedCharger && !isConnectedSuccess && (
+          {/* STATE 2: UNKNOWN / INVALID CHARGER ERROR */}
+          {detectedCharger && isChargerUnknown && !isConnectedSuccess && (
+            <div style={{
+              background: '#fef2f2',
+              border: '2px solid #fecaca',
+              borderRadius: '20px',
+              padding: '24px 20px',
+              textAlign: 'center',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '12px'
+            }}>
+              <div style={{
+                width: '56px',
+                height: '56px',
+                borderRadius: '50%',
+                backgroundColor: '#fee2e2',
+                color: '#dc2626',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <AlertCircle size={32} />
+              </div>
+
+              <div>
+                <h4 style={{ fontSize: '17px', fontWeight: 800, color: '#991b1b' }}>
+                  Unrecognized EV Dispenser
+                </h4>
+                <div style={{ fontFamily: 'monospace', fontWeight: 800, color: '#b91c1c', fontSize: '13px', marginTop: '4px' }}>
+                  {detectedCharger.identifier}
+                </div>
+                <p style={{ fontSize: '13px', color: '#7f1d1d', marginTop: '8px', lineHeight: 1.4 }}>
+                  {detectedCharger.errorReason || 'This QR code does not match any registered charger in the Halt & Charge network.'}
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px', width: '100%', marginTop: '6px' }}>
+                <button
+                  type="button"
+                  onClick={handleRescan}
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    borderRadius: '12px',
+                    border: '1px solid #fca5a5',
+                    background: '#ffffff',
+                    color: '#dc2626',
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  <RefreshCw size={15} />
+                  <span>Scan Another Code</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={onClose}
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    borderRadius: '12px',
+                    border: 'none',
+                    background: '#059669',
+                    color: '#ffffff',
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Browse Map
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* STATE 3: CHARGER DETECTED VIA SCAN (KNOWN DISPENSER) */}
+          {detectedCharger && !isChargerUnknown && !isConnectedSuccess && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {/* Detected Card */}
               <div style={{
                 background: '#ffffff',
-                border: '2px solid #a7f3d0',
+                border: isChargerAvailable ? '2px solid #a7f3d0' :
+                        isChargerOccupied ? '2px solid #bfdbfe' : '2px solid #fecaca',
                 borderRadius: '20px',
                 padding: '20px',
-                boxShadow: '0 8px 24px rgba(16, 185, 129, 0.12)'
+                boxShadow: isChargerAvailable ? '0 8px 24px rgba(16, 185, 129, 0.12)' : '0 4px 14px rgba(0,0,0,0.06)'
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
                   <div>
-                    <span style={{ fontSize: '11px', fontWeight: 700, color: '#059669', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                      QR Scan Verified Dispenser
+                    <span style={{
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      color: isChargerAvailable ? '#059669' :
+                             isChargerOccupied ? '#2563eb' : '#dc2626',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.06em'
+                    }}>
+                      {isChargerAvailable ? '⚡ Charger Detected & Verified' :
+                       isChargerOccupied ? 'ℹ️ Charger Occupied' : '⚠️ Charger Unavailable'}
                     </span>
                     <h4 style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a', marginTop: '2px' }}>
                       {detectedCharger.stationName}
                     </h4>
-                    <div style={{ fontFamily: 'monospace', fontWeight: 800, color: '#065f46', fontSize: '14px', marginTop: '2px' }}>
-                      {detectedCharger.identifier} {detectedCharger.chargerId ? `(#${detectedCharger.chargerId})` : ''}
+                    {detectedCharger.stationAddress && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
+                        <MapPin size={12} color="#059669" />
+                        <span>{detectedCharger.stationAddress}</span>
+                      </div>
+                    )}
+                    <div style={{ fontFamily: 'monospace', fontWeight: 800, color: '#065f46', fontSize: '14px', marginTop: '4px' }}>
+                      {detectedCharger.identifier} {detectedCharger.chargerId ? `(Dispenser #${detectedCharger.chargerId})` : ''}
                     </div>
                   </div>
 
                   {/* Status Pill */}
                   <span style={{
-                    padding: '4px 12px',
-                    borderRadius: '8px',
+                    padding: '5px 12px',
+                    borderRadius: '10px',
                     fontSize: '11px',
                     fontWeight: 800,
                     textTransform: 'uppercase',
@@ -488,8 +665,8 @@ export const ScanChargeModal: React.FC<ScanChargeModalProps> = ({
                   gridTemplateColumns: '1fr 1fr',
                   gap: '10px',
                   background: '#f8fafc',
-                  padding: '12px',
-                  borderRadius: '12px',
+                  padding: '12px 14px',
+                  borderRadius: '14px',
                   border: '1px solid #e2e8f0',
                   marginTop: '12px'
                 }}>
@@ -507,26 +684,49 @@ export const ScanChargeModal: React.FC<ScanChargeModalProps> = ({
                   </div>
                   <div>
                     <div style={{ fontSize: '11px', color: '#64748b' }}>Hardware Engine</div>
-                    <div style={{ fontSize: '11px', fontWeight: 700, color: '#059669' }}>[SIMULATED GUN]</div>
+                    <div style={{ fontSize: '11px', fontWeight: 700, color: '#059669' }}>Virtual Simulator Active</div>
                   </div>
                 </div>
 
-                {/* Status Warning if not available */}
-                {!isChargerAvailable && (
+                {/* Status Warning if Occupied */}
+                {isChargerOccupied && (
                   <div style={{
                     marginTop: '14px',
-                    padding: '10px 14px',
-                    borderRadius: '10px',
-                    backgroundColor: '#fffbeb',
-                    border: '1px solid #fde68a',
+                    padding: '12px 14px',
+                    borderRadius: '12px',
+                    backgroundColor: '#eff6ff',
+                    border: '1px solid #bfdbfe',
                     fontSize: '12px',
-                    color: '#92400e',
+                    color: '#1e40af',
                     display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px'
+                    alignItems: 'flex-start',
+                    gap: '10px'
                   }}>
-                    <AlertTriangle size={16} />
-                    <span>This charger is currently <strong>{detectedCharger.status}</strong> and cannot accept connections.</span>
+                    <AlertTriangle size={18} color="#2563eb" style={{ flexShrink: 0, marginTop: '1px' }} />
+                    <div>
+                      <strong>Charger Occupied:</strong> Another EV is currently charging at this gun. Please wait for the current session to complete or select an adjacent available dispenser.
+                    </div>
+                  </div>
+                )}
+
+                {/* Status Warning if Faulted or Offline */}
+                {isChargerOffline && (
+                  <div style={{
+                    marginTop: '14px',
+                    padding: '12px 14px',
+                    borderRadius: '12px',
+                    backgroundColor: '#fef2f2',
+                    border: '1px solid #fecaca',
+                    fontSize: '12px',
+                    color: '#991b1b',
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '10px'
+                  }}>
+                    <AlertTriangle size={18} color="#dc2626" style={{ flexShrink: 0, marginTop: '1px' }} />
+                    <div>
+                      <strong>Dispenser Offline:</strong> This charger is undergoing maintenance or is temporarily offline. Please use another charger at this station.
+                    </div>
                   </div>
                 )}
               </div>
@@ -534,9 +734,12 @@ export const ScanChargeModal: React.FC<ScanChargeModalProps> = ({
               {/* Vehicle Selector (Only if Available) */}
               {isChargerAvailable && (
                 <div>
-                  <label style={{ fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '6px', display: 'block' }}>
-                    Select Your EV Vehicle:
-                  </label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+                    <Car size={15} color="#059669" />
+                    <label style={{ fontSize: '13px', fontWeight: 700, color: '#334155' }}>
+                      Select Your EV Profile:
+                    </label>
+                  </div>
                   <select
                     value={vehicleId}
                     onChange={e => setVehicleId(Number(e.target.value))}
@@ -555,7 +758,7 @@ export const ScanChargeModal: React.FC<ScanChargeModalProps> = ({
                     {vehicles.length > 0 ? (
                       vehicles.map(v => (
                         <option key={v.id} value={v.id}>
-                          {v.brand} {v.model} ({v.licensePlate})
+                          {v.brand} {v.model} ({v.licensePlate}) • {v.batteryCapacityKwh} kWh
                         </option>
                       ))
                     ) : (
@@ -565,7 +768,27 @@ export const ScanChargeModal: React.FC<ScanChargeModalProps> = ({
                 </div>
               )}
 
-              {/* Error message */}
+              {/* Authentication Prompt Banner (If not logged in) */}
+              {!isAuthenticated && isChargerAvailable && (
+                <div style={{
+                  padding: '12px 14px',
+                  borderRadius: '12px',
+                  backgroundColor: '#ecfdf5',
+                  border: '1px solid #a7f3d0',
+                  color: '#065f46',
+                  fontSize: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px'
+                }}>
+                  <Shield size={18} color="#059669" style={{ flexShrink: 0 }} />
+                  <div>
+                    <strong>Sign In Required:</strong> Please sign in or create an account to initiate charging at <strong>{detectedCharger.identifier}</strong>.
+                  </div>
+                </div>
+              )}
+
+              {/* Error message from API */}
               {errorMessage && (
                 <div style={{
                   padding: '10px 14px',
@@ -574,9 +797,13 @@ export const ScanChargeModal: React.FC<ScanChargeModalProps> = ({
                   border: '1px solid #fca5a5',
                   color: '#dc2626',
                   fontSize: '12px',
-                  fontWeight: 600
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
                 }}>
-                  {errorMessage}
+                  <AlertCircle size={16} color="#dc2626" />
+                  <span>{errorMessage}</span>
                 </div>
               )}
 
@@ -624,26 +851,40 @@ export const ScanChargeModal: React.FC<ScanChargeModalProps> = ({
                     boxShadow: isChargerAvailable ? '0 4px 14px rgba(16, 185, 129, 0.35)' : 'none'
                   }}
                 >
-                  <Zap size={18} />
-                  <span>{isConnecting ? 'Establishing Connection...' : 'Connect & Start Charging'}</span>
+                  {isConnecting ? (
+                    <>
+                      <RefreshCw size={18} className="animate-spin" />
+                      <span>Initiating Charging Session...</span>
+                    </>
+                  ) : !isAuthenticated ? (
+                    <>
+                      <LogIn size={18} />
+                      <span>Sign In & Start Charging</span>
+                    </>
+                  ) : (
+                    <>
+                      <Zap size={18} />
+                      <span>Confirm & Start Charging</span>
+                    </>
+                  )}
                 </button>
               </div>
             </div>
           )}
 
-          {/* STATE 3: CHARGER CONNECTED CONFIRMATION */}
+          {/* STATE 4: CHARGER CONNECTED CONFIRMATION */}
           {isConnectedSuccess && (
             <div style={{
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              padding: '30px 20px',
+              padding: '36px 20px',
               textAlign: 'center'
             }}>
               <div style={{
-                width: '72px',
-                height: '72px',
+                width: '76px',
+                height: '76px',
                 borderRadius: '50%',
                 backgroundColor: '#ecfdf5',
                 border: '3px solid #10b981',
@@ -654,17 +895,18 @@ export const ScanChargeModal: React.FC<ScanChargeModalProps> = ({
                 boxShadow: '0 10px 25px rgba(16, 185, 129, 0.35)',
                 marginBottom: '16px'
               }}>
-                <CheckCircle2 size={44} strokeWidth={2.5} />
+                <CheckCircle2 size={46} strokeWidth={2.5} />
               </div>
 
-              <h3 style={{ fontSize: '22px', fontWeight: 900, color: '#065f46', marginBottom: '4px' }}>
-                Charger Connected
+              <h3 style={{ fontSize: '22px', fontWeight: 900, color: '#065f46', marginBottom: '6px' }}>
+                Charger Connected!
               </h3>
-              <p style={{ fontSize: '13px', color: '#047857', maxWidth: '320px' }}>
-                Handshake verified with {detectedCharger?.identifier}. Virtual Charger Simulator initialized!
+              <p style={{ fontSize: '13px', color: '#047857', maxWidth: '340px', lineHeight: 1.5 }}>
+                Handshake verified with <strong>{detectedCharger?.identifier}</strong>. Virtual Charger Simulator initiated!
               </p>
-              <div style={{ marginTop: '16px', fontSize: '11px', color: '#64748b', fontWeight: 600 }}>
-                Opening Live Charging Cockpit...
+              <div style={{ marginTop: '16px', fontSize: '12px', color: '#64748b', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Zap size={14} color="#059669" />
+                <span>Launching Live Charging Cockpit...</span>
               </div>
             </div>
           )}

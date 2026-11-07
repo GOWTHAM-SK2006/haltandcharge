@@ -60,9 +60,59 @@ export default function App() {
       return;
     }
 
-    // 2. If no user is logged in at all, prompt Sign In immediately
-    if (!customerToken && !adminToken) {
-      setShowAuthModal(true);
+    // 2. Check for Universal QR scanned charger identifier in URL path, query params, or hash
+    let scannedFromUrl: string | null = null;
+    try {
+      // A. Path match: /scan/IDENTIFIER
+      const pathMatch = window.location.pathname.match(/\/scan\/([a-zA-Z0-9\-_]+)/i);
+      if (pathMatch && pathMatch[1]) {
+        scannedFromUrl = decodeURIComponent(pathMatch[1]).trim();
+      }
+
+      // B. Query param: ?scan=IDENTIFIER or ?charger=IDENTIFIER
+      if (!scannedFromUrl && window.location.search) {
+        const searchParams = new URLSearchParams(window.location.search);
+        const paramVal = searchParams.get('scan') || searchParams.get('charger');
+        if (paramVal) {
+          scannedFromUrl = decodeURIComponent(paramVal).trim();
+        }
+      }
+
+      // C. Hash match: #/scan/IDENTIFIER
+      if (!scannedFromUrl && window.location.hash) {
+        const hashMatch = window.location.hash.match(/\/scan\/([a-zA-Z0-9\-_]+)/i);
+        if (hashMatch && hashMatch[1]) {
+          scannedFromUrl = decodeURIComponent(hashMatch[1]).trim();
+        }
+      }
+    } catch (e) {
+      console.warn('Error reading scan parameters:', e);
+    }
+
+    const pendingScan = scannedFromUrl || sessionStorage.getItem('hc_pending_scan');
+
+    if (pendingScan) {
+      sessionStorage.setItem('hc_pending_scan', pendingScan);
+      setScanInitialChargerId(pendingScan);
+
+      if (customerToken) {
+        // Customer is already authenticated: directly open the scanned charger confirmation cockpit!
+        setActiveNavTab('scan');
+        setShowAuthModal(false);
+      } else {
+        // Customer is NOT authenticated: prompt Sign In / Register while keeping scanned dispenser attached
+        setShowAuthModal(true);
+      }
+
+      // Clean URL back to root if it was opened via /scan/ so back button works cleanly
+      if (scannedFromUrl && window.history.replaceState) {
+        window.history.replaceState({}, document.title, '/');
+      }
+    } else {
+      // 3. Normal initial visit: If no user is logged in at all, prompt Sign In immediately
+      if (!customerToken && !adminToken) {
+        setShowAuthModal(true);
+      }
     }
 
     if (navigator.geolocation) {
@@ -297,6 +347,15 @@ export default function App() {
     localStorage.removeItem('hc_admin_token');
     setToken(newToken);
     setShowAuthModal(false);
+
+    // Check if there was a pending QR scan waiting for authentication
+    const pendingScan = sessionStorage.getItem('hc_pending_scan') || scanInitialChargerId;
+    if (pendingScan) {
+      setScanInitialChargerId(pendingScan);
+      setActiveNavTab('scan');
+      sessionStorage.removeItem('hc_pending_scan');
+    }
+
     fetchData();
   };
 
@@ -431,6 +490,7 @@ export default function App() {
           onClose={() => {
             setActiveNavTab('map');
             setScanInitialChargerId(undefined);
+            sessionStorage.removeItem('hc_pending_scan');
           }}
           isAuthenticated={!!token}
           onOpenAuth={() => setShowAuthModal(true)}
@@ -491,6 +551,7 @@ export default function App() {
         <AuthModal
           onSuccess={handleAuthSuccess}
           onClose={() => setShowAuthModal(false)}
+          pendingChargerId={scanInitialChargerId || sessionStorage.getItem('hc_pending_scan') || undefined}
         />
       )}
 
