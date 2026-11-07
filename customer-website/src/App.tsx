@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { MapComponent } from './components/MapComponent';
-import { TopBar } from './components/TopBar';
+import { TopBar, FilterCategory } from './components/TopBar';
 import { BottomNav, NavTab } from './components/BottomNav';
+import { StationCard } from './components/StationCard';
 import { StationDetailModal } from './components/StationDetailModal';
 import { SearchModal } from './components/SearchModal';
 import { TripPlannerModal } from './components/TripPlannerModal';
@@ -27,9 +28,11 @@ export default function App() {
   const [activeSession, setActiveSession] = useState<ChargingSession | null>(null);
   const [sessionHistory, setSessionHistory] = useState<ChargingSession[]>([]);
 
-  // Navigation & Modal States
+  // Navigation, Filter & Modal States
   const [activeNavTab, setActiveNavTab] = useState<NavTab>('map');
+  const [activeFilter, setActiveFilter] = useState<FilterCategory>('all');
   const [selectedStation, setSelectedStation] = useState<Station | null>(null);
+  const [showFullStationModal, setShowFullStationModal] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [showTripPlanner, setShowTripPlanner] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -124,13 +127,42 @@ export default function App() {
   // Wallet Balance calculation
   const totalWalletBalance = (profile?.walletBalance ?? 0) + localWalletOffset;
 
+  // Filter stations based on selected horizontal chip
+  const filteredStations = stations.filter(station => {
+    if (activeFilter === 'fast') {
+      return station.chargers?.some(c => c.chargerType === 'DC' && (c.maxPowerKw ?? 0) >= 50);
+    }
+    if (activeFilter === 'available') {
+      const avail = (station.availableChargers ?? 0) > 0 || station.chargers?.some(c => c.status === 'AVAILABLE');
+      return avail && station.isActive;
+    }
+    if (activeFilter === 'favourites') {
+      return favourites.some(f => f.id === station.id);
+    }
+    return true;
+  });
+
+  // Displayed station for bottom floating card
+  const displayedStation = selectedStation || (filteredStations.length > 0 ? filteredStations[0] : (stations.length > 0 ? stations[0] : null));
+
+  // Determine if floating station card should be visible
+  const hasFloatingStationCard = activeNavTab === 'map' &&
+    !showSearch &&
+    !showTripPlanner &&
+    !showProfileModal &&
+    !showFavouritesModal &&
+    !showWalletTopUp &&
+    !showActiveSessionModal &&
+    !showAuthModal &&
+    !showFullStationModal &&
+    displayedStation !== null;
+
   // Handle Tab Switch
   const handleTabChange = (tab: NavTab) => {
     setActiveNavTab(tab);
     setShowProfileModal(false);
     setShowFavouritesModal(false);
     if (tab === 'map') {
-      setSelectedStation(null);
       setShowTripPlanner(false);
       setShowWalletTopUp(false);
     } else if (tab === 'trip') {
@@ -168,6 +200,16 @@ export default function App() {
   const handleStartChargeOnCharger = (charger: Charger) => {
     setScanInitialChargerId(charger.identifier);
     setActiveNavTab('scan');
+  };
+
+  // Start Charging from Station Card
+  const handleStationStartCharge = (st: Station) => {
+    const availableCharger = st.chargers?.find(c => c.status === 'AVAILABLE') || st.chargers?.[0];
+    if (availableCharger) {
+      handleStartChargeOnCharger(availableCharger);
+    } else {
+      setActiveNavTab('scan');
+    }
   };
 
   // Initiate Charging Session API
@@ -248,16 +290,20 @@ export default function App() {
     }}>
       {/* 1. Full-Screen Interactive Leaflet Map */}
       <MapComponent
-        stations={stations}
-        selectedStation={selectedStation}
+        stations={filteredStations}
+        selectedStation={displayedStation}
         onSelectStation={handleSelectStation}
         userLocation={userLocation}
         onRefresh={fetchData}
         onOpenFilter={() => setShowSearch(true)}
+        hasStationCard={hasFloatingStationCard}
       />
 
       {/* 2. Top Floating Navigation Bar (Matches reference design) */}
       <TopBar
+        walletBalance={totalWalletBalance}
+        activeFilter={activeFilter}
+        onFilterChange={setActiveFilter}
         onOpenSearch={() => {
           setShowProfileModal(false);
           setShowSearch(true);
@@ -267,9 +313,27 @@ export default function App() {
           setShowTripPlanner(false);
           setShowProfileModal(true);
         }}
+        onOpenWallet={() => {
+          setShowProfileModal(false);
+          setShowWalletTopUp(true);
+        }}
       />
 
-      {/* 3. Bottom Navigation Bar */}
+      {/* 3. Floating Station Details Card (Matches reference design) */}
+      {hasFloatingStationCard && displayedStation && (
+        <StationCard
+          station={displayedStation}
+          isFavourite={favourites.some(f => f.id === displayedStation.id)}
+          onToggleFavourite={handleToggleFavourite}
+          onViewDetails={st => {
+            setSelectedStation(st);
+            setShowFullStationModal(true);
+          }}
+          onStartCharge={handleStationStartCharge}
+        />
+      )}
+
+      {/* 4. Bottom Navigation Bar */}
       <BottomNav
         activeTab={activeNavTab}
         onTabChange={handleTabChange}
@@ -277,18 +341,18 @@ export default function App() {
         onOpenActiveSession={() => setShowActiveSessionModal(true)}
       />
 
-      {/* 4. Station Detail Bottom Sheet (When station marker is clicked) */}
-      {selectedStation && (
+      {/* 5. Station Detail Full Modal (When View Details is clicked) */}
+      {showFullStationModal && selectedStation && (
         <StationDetailModal
           station={selectedStation}
           isFavourite={favourites.some(f => f.id === selectedStation.id)}
           onToggleFavourite={handleToggleFavourite}
           onStartCharge={handleStartChargeOnCharger}
-          onClose={() => setSelectedStation(null)}
+          onClose={() => setShowFullStationModal(false)}
         />
       )}
 
-      {/* 5. Search Modal */}
+      {/* 6. Search Modal */}
       {showSearch && (
         <SearchModal
           stations={stations}
@@ -300,7 +364,7 @@ export default function App() {
         />
       )}
 
-      {/* 6. Trip Planner Modal */}
+      {/* 7. Trip Planner Modal */}
       {(showTripPlanner || activeNavTab === 'trip') && (
         <TripPlannerModal
           stations={stations}
@@ -316,7 +380,7 @@ export default function App() {
         />
       )}
 
-      {/* 7. My EVs Modal */}
+      {/* 8. My EVs Modal */}
       {activeNavTab === 'evs' && (
         <MyEvsModal
           vehicles={vehicles}
@@ -327,7 +391,7 @@ export default function App() {
         />
       )}
 
-      {/* 8. Scan & Instant Charge Modal */}
+      {/* 9. Scan & Instant Charge Modal */}
       {activeNavTab === 'scan' && (
         <ScanChargeModal
           stations={stations}
@@ -343,7 +407,7 @@ export default function App() {
         />
       )}
 
-      {/* 9. Favourites Modal (Opened from Profile -> Favourites) */}
+      {/* 10. Favourites Modal (Opened from Profile -> Favourites) */}
       {showFavouritesModal && (
         <FavouritesModal
           favourites={favourites}
@@ -359,7 +423,7 @@ export default function App() {
         />
       )}
 
-      {/* 10. Profile & Account Modal (Opened by Circular Profile Icon) */}
+      {/* 11. Profile & Account Modal (Opened by Circular Profile Icon) */}
       {showProfileModal && (
         <MoreModal
           profile={profile}
@@ -382,7 +446,7 @@ export default function App() {
         />
       )}
 
-      {/* 11. Live Active Session Cockpit Modal */}
+      {/* 12. Live Active Session Cockpit Modal */}
       {showActiveSessionModal && activeSession && (
         <ActiveSessionModal
           session={activeSession}
@@ -391,7 +455,7 @@ export default function App() {
         />
       )}
 
-      {/* 12. Auth Sign In / Register Modal */}
+      {/* 13. Auth Sign In / Register Modal */}
       {showAuthModal && (
         <AuthModal
           onSuccess={handleAuthSuccess}
@@ -399,7 +463,7 @@ export default function App() {
         />
       )}
 
-      {/* 13. Wallet Modal (Opened from Bottom Navigation Bar or Profile) */}
+      {/* 14. Wallet Modal (Opened from Bottom Navigation Bar or Profile) */}
       {(showWalletTopUp || activeNavTab === 'wallet') && (
         <WalletTopUpModal
           currentBalance={totalWalletBalance}

@@ -172,6 +172,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           <button
             onClick={() => onTabChange('scan')}
             title="Scan QR to Start Charging"
+            className="hc-scan-fab-glow"
             style={{
               width: '58px',
               height: '58px',

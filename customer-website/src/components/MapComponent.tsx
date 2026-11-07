@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
-import { Layers, RefreshCw, Crosshair, Filter } from 'lucide-react';
+import { Layers, Navigation, Crosshair } from 'lucide-react';
 import { Station } from '../types';
 
 interface MapComponentProps {
@@ -10,6 +10,7 @@ interface MapComponentProps {
   userLocation: { lat: number; lng: number };
   onRefresh: () => void;
   onOpenFilter: () => void;
+  hasStationCard?: boolean;
 }
 
 export const MapComponent: React.FC<MapComponentProps> = ({
@@ -18,14 +19,14 @@ export const MapComponent: React.FC<MapComponentProps> = ({
   onSelectStation,
   userLocation,
   onRefresh,
-  onOpenFilter
+  onOpenFilter,
+  hasStationCard = false
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersRef = useRef<{ [key: number]: L.Marker }>({});
   const userMarkerRef = useRef<L.Marker | null>(null);
   const [mapLayer, setMapLayer] = useState<'osm' | 'hot'>('osm');
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Initialize Map
   useEffect(() => {
@@ -95,7 +96,7 @@ export const MapComponent: React.FC<MapComponentProps> = ({
     }
   }, [userLocation]);
 
-  // Render & Update Station Markers
+  // Render & Update Station Markers (3D styling + Status colors + Pulsing halo)
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map) return;
@@ -113,27 +114,58 @@ export const MapComponent: React.FC<MapComponentProps> = ({
     // Add or update markers
     stations.forEach(station => {
       const isSelected = selectedStation?.id === station.id;
-      const isAvailable = (station.availableChargers ?? 0) > 0;
-      const statusClass = !station.isActive ? 'offline' : (isAvailable ? '' : 'occupied');
+
+      // Status determination
+      const hasFault = station.chargers?.some(c => c.status === 'FAULTED');
+      const isOffline = !station.isActive || station.chargers?.every(c => c.status === 'OFFLINE');
+      const hasAvailable = (station.availableChargers ?? 0) > 0 || station.chargers?.some(c => c.status === 'AVAILABLE');
+      const isOccupied = !hasAvailable && station.chargers?.some(c => c.status === 'CHARGING' || c.status === 'PREPARING');
+
+      let statusClass = '';
+      let iconSvg = `
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#ffffff" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+        </svg>
+      `;
+
+      if (isOffline) {
+        statusClass = 'offline';
+        iconSvg = `
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        `;
+      } else if (hasFault) {
+        statusClass = 'faulted';
+        iconSvg = `
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+          </svg>
+        `;
+      } else if (isOccupied) {
+        statusClass = 'occupied';
+      }
+
       const selectedClass = isSelected ? 'selected' : '';
+      const haloHtml = isSelected ? '<div class="hc-pin-halo"></div>' : '';
 
       const markerHtml = `
         <div class="hc-station-pin">
           <div class="hc-pin-bubble ${statusClass} ${selectedClass}">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="#ffffff" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-            </svg>
+            ${iconSvg}
           </div>
           <div class="hc-pin-arrow"></div>
+          ${haloHtml}
         </div>
       `;
 
       const customIcon = L.divIcon({
         html: markerHtml,
         className: '',
-        iconSize: [40, 48],
-        iconAnchor: [20, 48],
-        popupAnchor: [0, -48]
+        iconSize: [44, 52],
+        iconAnchor: [22, 50],
+        popupAnchor: [0, -50]
       });
 
       if (markersRef.current[station.id]) {
@@ -177,11 +209,22 @@ export const MapComponent: React.FC<MapComponentProps> = ({
     });
   };
 
-  // Handle Refresh Click
-  const handleRefreshClick = () => {
-    setIsRefreshing(true);
-    onRefresh();
-    setTimeout(() => setIsRefreshing(false), 800);
+  // Handle Center / Re-orient to Station
+  const handleNavigateToStation = () => {
+    if (!mapInstanceRef.current) return;
+    if (selectedStation) {
+      mapInstanceRef.current.flyTo([selectedStation.latitude, selectedStation.longitude], 15, {
+        animate: true,
+        duration: 0.8
+      });
+    } else if (stations.length > 0) {
+      mapInstanceRef.current.flyTo([stations[0].latitude, stations[0].longitude], 14, {
+        animate: true,
+        duration: 0.8
+      });
+    } else {
+      handleLocateMe();
+    }
   };
 
   return (
@@ -189,16 +232,17 @@ export const MapComponent: React.FC<MapComponentProps> = ({
       {/* Map DOM Element */}
       <div ref={mapContainerRef} style={{ width: '100%', height: '100%' }} />
 
-      {/* Floating Map Controls - Bottom Left (Layers & Refresh, Fixed on Viewport Above Bottom Nav) */}
+      {/* Floating Map Controls - Right Side (Layers, Compass/Navigation, Location Crosshair) */}
       <div style={{
         position: 'fixed',
-        bottom: '98px',
-        left: '16px',
-        zIndex: 35,
+        bottom: hasStationCard ? '302px' : '98px',
+        right: '16px',
+        zIndex: 36,
         pointerEvents: 'auto',
         display: 'flex',
-        flexDirection: 'column-reverse',
-        gap: '10px'
+        flexDirection: 'column',
+        gap: '10px',
+        transition: 'bottom 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)'
       }}>
         {/* Toggle Layers */}
         <button
@@ -224,10 +268,10 @@ export const MapComponent: React.FC<MapComponentProps> = ({
           <Layers size={20} strokeWidth={2} />
         </button>
 
-        {/* Refresh Stations */}
+        {/* Center / Navigation to Station */}
         <button
-          onClick={handleRefreshClick}
-          title="Refresh Stations"
+          onClick={handleNavigateToStation}
+          title="Center on Station"
           style={{
             width: '46px',
             height: '46px',
@@ -238,25 +282,17 @@ export const MapComponent: React.FC<MapComponentProps> = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: '#334155',
+            color: '#1e293b',
             cursor: 'pointer',
             transition: 'transform 0.15s ease, background-color 0.15s ease'
           }}
           onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#f8fafc')}
           onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#ffffff')}
         >
-          <RefreshCw size={20} style={{ animation: isRefreshing ? 'spin 0.8s linear infinite' : 'none' }} />
+          <Navigation size={20} strokeWidth={2.2} style={{ transform: 'rotate(45deg)' }} />
         </button>
-      </div>
 
-      {/* Floating Map Controls - Bottom Right (Current Location, Fixed on Viewport Above Bottom Nav) */}
-      <div style={{
-        position: 'fixed',
-        bottom: '98px',
-        right: '16px',
-        zIndex: 35,
-        pointerEvents: 'auto'
-      }}>
+        {/* Locate Me */}
         <button
           onClick={handleLocateMe}
           title="My Location"
@@ -289,4 +325,3 @@ export const MapComponent: React.FC<MapComponentProps> = ({
     </div>
   );
 };
-
