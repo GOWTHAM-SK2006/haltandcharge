@@ -32,6 +32,7 @@ export default function App() {
   const [activeNavTab, setActiveNavTab] = useState<NavTab>('map');
   const [activeFilter, setActiveFilter] = useState<FilterCategory>('all');
   const [selectedStation, setSelectedStation] = useState<Station | null>(null);
+  const [isCardDismissed, setIsCardDismissed] = useState(false);
   const [showFullStationModal, setShowFullStationModal] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [showTripPlanner, setShowTripPlanner] = useState(false);
@@ -143,7 +144,9 @@ export default function App() {
   });
 
   // Displayed station for bottom floating card
-  const displayedStation = selectedStation || (filteredStations.length > 0 ? filteredStations[0] : (stations.length > 0 ? stations[0] : null));
+  const displayedStation = isCardDismissed
+    ? null
+    : (selectedStation || (filteredStations.length > 0 ? filteredStations[0] : (stations.length > 0 ? stations[0] : null)));
 
   // Determine if floating station card should be visible
   const hasFloatingStationCard = activeNavTab === 'map' &&
@@ -172,9 +175,16 @@ export default function App() {
     }
   };
 
-  // Handle Station Marker Click
+  // Handle Station Marker Click -> Show card
   const handleSelectStation = (station: Station) => {
+    setIsCardDismissed(false);
     setSelectedStation(station);
+  };
+
+  // Handle Map Click -> Dismiss card
+  const handleMapClick = () => {
+    setIsCardDismissed(true);
+    setSelectedStation(null);
   };
 
   // Toggle Favourite Station
@@ -293,6 +303,7 @@ export default function App() {
         stations={filteredStations}
         selectedStation={displayedStation}
         onSelectStation={handleSelectStation}
+        onMapClick={handleMapClick}
         userLocation={userLocation}
         onRefresh={fetchData}
         onOpenFilter={() => setShowSearch(true)}
@@ -357,6 +368,7 @@ export default function App() {
         <SearchModal
           stations={stations}
           onSelectStation={st => {
+            setIsCardDismissed(false);
             setSelectedStation(st);
             setShowSearch(false);
           }}
@@ -369,6 +381,7 @@ export default function App() {
         <TripPlannerModal
           stations={stations}
           onSelectStation={st => {
+            setIsCardDismissed(false);
             setSelectedStation(st);
             setShowTripPlanner(false);
             setActiveNavTab('map');
@@ -412,6 +425,7 @@ export default function App() {
         <FavouritesModal
           favourites={favourites}
           onSelectStation={st => {
+            setIsCardDismissed(false);
             setSelectedStation(st);
             setShowFavouritesModal(false);
             setActiveNavTab('map');

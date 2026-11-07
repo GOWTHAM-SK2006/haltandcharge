@@ -7,6 +7,7 @@ interface MapComponentProps {
   stations: Station[];
   selectedStation: Station | null;
   onSelectStation: (station: Station) => void;
+  onMapClick?: () => void;
   userLocation: { lat: number; lng: number };
   onRefresh: () => void;
   onOpenFilter: () => void;
@@ -17,6 +18,7 @@ export const MapComponent: React.FC<MapComponentProps> = ({
   stations,
   selectedStation,
   onSelectStation,
+  onMapClick,
   userLocation,
   onRefresh,
   onOpenFilter,
@@ -27,6 +29,16 @@ export const MapComponent: React.FC<MapComponentProps> = ({
   const markersRef = useRef<{ [key: number]: L.Marker }>({});
   const userMarkerRef = useRef<L.Marker | null>(null);
   const [mapLayer, setMapLayer] = useState<'osm' | 'hot'>('osm');
+
+  const onMapClickRef = useRef(onMapClick);
+  useEffect(() => {
+    onMapClickRef.current = onMapClick;
+  }, [onMapClick]);
+
+  const onSelectStationRef = useRef(onSelectStation);
+  useEffect(() => {
+    onSelectStationRef.current = onSelectStation;
+  }, [onSelectStation]);
 
   // Initialize Map
   useEffect(() => {
@@ -39,6 +51,10 @@ export const MapComponent: React.FC<MapComponentProps> = ({
       center: [initialLat, initialLng],
       zoom: 13,
       zoomControl: false,
+    });
+
+    map.on('click', () => {
+      onMapClickRef.current?.();
     });
 
     const tileUrl = mapLayer === 'hot'
@@ -171,11 +187,21 @@ export const MapComponent: React.FC<MapComponentProps> = ({
       if (markersRef.current[station.id]) {
         markersRef.current[station.id].setIcon(customIcon);
         markersRef.current[station.id].setLatLng([station.latitude, station.longitude]);
+        markersRef.current[station.id].off('click');
+        markersRef.current[station.id].on('click', (e: any) => {
+          if (e && e.originalEvent) {
+            L.DomEvent.stopPropagation(e);
+          }
+          onSelectStationRef.current(station);
+        });
       } else {
         const marker = L.marker([station.latitude, station.longitude], { icon: customIcon })
           .addTo(map)
-          .on('click', () => {
-            onSelectStation(station);
+          .on('click', (e: any) => {
+            if (e && e.originalEvent) {
+              L.DomEvent.stopPropagation(e);
+            }
+            onSelectStationRef.current(station);
           });
         markersRef.current[station.id] = marker;
       }
