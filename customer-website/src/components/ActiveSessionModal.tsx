@@ -87,7 +87,20 @@ export const ActiveSessionModal: React.FC<ActiveSessionModalProps> = ({
                 <Zap size={22} fill="var(--hc-green-primary)" />
               </div>
               <div>
-                <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--hc-text-primary)' }}>Live Charging Cockpit</h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--hc-text-primary)' }}>Live Charging Cockpit</h3>
+                  <span style={{
+                    fontSize: '10px',
+                    fontWeight: 700,
+                    padding: '2px 6px',
+                    borderRadius: '4px',
+                    backgroundColor: '#ecfdf5',
+                    color: '#059669',
+                    border: '1px solid #a7f3d0'
+                  }}>
+                    SIMULATED
+                  </span>
+                </div>
                 <p style={{ fontSize: '12px', color: 'var(--hc-green-dark)', fontWeight: 600 }}>
                   Active Port: {session.chargerIdentifier} • {session.stationName || 'Halt & Charge Station'}
                 </p>
@@ -163,9 +176,12 @@ export const ActiveSessionModal: React.FC<ActiveSessionModalProps> = ({
               backgroundColor: 'var(--hc-surface-subtle)',
               border: '1px solid var(--hc-border)'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--hc-text-muted)', fontSize: '12px', fontWeight: 600 }}>
-                <Gauge size={16} color="var(--hc-green-primary)" />
-                Power Speed
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: 'var(--hc-text-muted)', fontSize: '12px', fontWeight: 600 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Gauge size={16} color="var(--hc-green-primary)" />
+                  Power Speed
+                </div>
+                <span style={{ fontSize: '9px', fontWeight: 700, color: '#059669' }}>SIMULATED</span>
               </div>
               <div style={{ fontSize: '20px', fontWeight: 800, color: 'var(--hc-text-primary)', marginTop: '4px' }}>
                 {session.currentPowerKw?.toFixed(1) || '0.0'} <span style={{ fontSize: '13px', fontWeight: 600 }}>kW</span>
@@ -179,9 +195,12 @@ export const ActiveSessionModal: React.FC<ActiveSessionModalProps> = ({
               backgroundColor: 'var(--hc-surface-subtle)',
               border: '1px solid var(--hc-border)'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--hc-text-muted)', fontSize: '12px', fontWeight: 600 }}>
-                <Zap size={16} color="var(--hc-green-primary)" />
-                Delivered
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: 'var(--hc-text-muted)', fontSize: '12px', fontWeight: 600 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Zap size={16} color="var(--hc-green-primary)" />
+                  Delivered
+                </div>
+                <span style={{ fontSize: '9px', fontWeight: 700, color: '#059669' }}>SIMULATED</span>
               </div>
               <div style={{ fontSize: '20px', fontWeight: 800, color: 'var(--hc-text-primary)', marginTop: '4px' }}>
                 {session.energyKwh?.toFixed(2) || '0.00'} <span style={{ fontSize: '13px', fontWeight: 600 }}>kWh</span>

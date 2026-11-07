@@ -17,6 +17,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -44,6 +45,9 @@ class HaltChargeBackendComprehensiveTests {
 
     @Autowired
     private ChargerCommunicationService simulatorService;
+
+    @Autowired
+    private com.haltcharge.controller.AdminController adminController;
 
     private String testIdentifier = "HC-TEST-RAPID-01";
 
@@ -182,5 +186,36 @@ class HaltChargeBackendComprehensiveTests {
         simulatorService.setChargerFault(testChargerId, "Simulated Overcurrent Trip");
         // Restore
         simulatorService.restoreChargerAvailable(testChargerId);
+    }
+
+    @Test
+    @Transactional
+    @WithMockUser(roles = "ADMIN")
+    @DisplayName("6. Admin Dedicated ON/OFF Simulator Hardware Control with Confirmation")
+    void testAdminChargerOnAndOffSimulatorControl() {
+        Charger c = chargerRepository.findByIdentifier(testIdentifier).orElseThrow();
+        Long testChargerId = c.getId();
+
+        // 1. Turn ON Charger
+        var onResponse = adminController.turnOnCharger(testChargerId);
+        assertNotNull(onResponse);
+        assertEquals(200, onResponse.getStatusCode().value());
+        assertEquals("Charger turned ON successfully", onResponse.getBody().get("message"));
+        assertEquals("CHARGING", onResponse.getBody().get("status"));
+
+        // Verify charger state in database
+        Charger activeCharger = chargerRepository.findById(testChargerId).orElseThrow();
+        assertEquals("CHARGING", activeCharger.getStatus());
+
+        // 2. Turn OFF Charger
+        var offResponse = adminController.turnOffCharger(testChargerId);
+        assertNotNull(offResponse);
+        assertEquals(200, offResponse.getStatusCode().value());
+        assertEquals("Charger turned OFF successfully", offResponse.getBody().get("message"));
+        assertEquals("AVAILABLE", offResponse.getBody().get("status"));
+
+        // Verify restored state in database
+        Charger idleCharger = chargerRepository.findById(testChargerId).orElseThrow();
+        assertEquals("AVAILABLE", idleCharger.getStatus());
     }
 }

@@ -5,6 +5,7 @@ import com.haltcharge.dto.ChargerDto;
 import com.haltcharge.dto.SessionDto;
 import com.haltcharge.dto.StationDto;
 import com.haltcharge.entity.Charger;
+import com.haltcharge.entity.ChargingSession;
 import com.haltcharge.entity.Station;
 import com.haltcharge.entity.User;
 import com.haltcharge.exception.ResourceNotFoundException;
@@ -12,13 +13,18 @@ import com.haltcharge.repository.*;
 import com.haltcharge.service.ChargingSessionService;
 import com.haltcharge.service.StationService;
 import com.haltcharge.simulator.ChargerCommunicationService;
+import com.haltcharge.websocket.RealtimeUpdateService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -35,6 +41,7 @@ public class AdminController {
     private final SimulatorEventRepository eventRepository;
     private final AuditLogRepository auditLogRepository;
     private final JdbcClient jdbcClient;
+    private final RealtimeUpdateService realtimeUpdateService;
 
     public AdminController(UserRepository userRepository,
                            StationRepository stationRepository,
@@ -45,7 +52,8 @@ public class AdminController {
                            ChargerCommunicationService simulatorService,
                            SimulatorEventRepository eventRepository,
                            AuditLogRepository auditLogRepository,
-                           JdbcClient jdbcClient) {
+                           JdbcClient jdbcClient,
+                           RealtimeUpdateService realtimeUpdateService) {
         this.userRepository = userRepository;
         this.stationRepository = stationRepository;
         this.chargerRepository = chargerRepository;
@@ -56,6 +64,7 @@ public class AdminController {
         this.eventRepository = eventRepository;
         this.auditLogRepository = auditLogRepository;
         this.jdbcClient = jdbcClient;
+        this.realtimeUpdateService = realtimeUpdateService;
     }
 
     // 1. Dashboard Metrics
@@ -193,6 +202,75 @@ public class AdminController {
     public ResponseEntity<Map<String, String>> restoreAvailable(@PathVariable Long id) {
         simulatorService.restoreChargerAvailable(id);
         return ResponseEntity.ok(Map.of("message", "Restored charger " + id + " to AVAILABLE"));
+    }
+
+    @PostMapping("/simulator/chargers/{id}/turn-on")
+    public ResponseEntity<Map<String, Object>> turnOnCharger(@PathVariable Long id) {
+        Charger charger = chargerRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Charger not found with ID: " + id));
+
+        // Check if an active session already exists for this charger
+        Optional<ChargingSession> activeSessionOpt = sessionRepository.findActiveSessionByChargerId(id);
+        String sessionUid;
+        if (activeSessionOpt.isPresent()) {
+            sessionUid = activeSessionOpt.get().getSessionUid();
+        } else {
+            // Initiate a simulated session so virtual hardware generates live energy, power, and cost
+            sessionUid = "HC-SIM-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+            ChargingSession s = new ChargingSession();
+            s.setSessionUid(sessionUid);
+            s.setUserId(1L); // Admin account
+            s.setStationId(charger.getStationId());
+            s.setChargerId(charger.getId());
+            s.setStatus("IN_PROGRESS");
+            s.setIsSimulated(true);
+            s.setTariffSnapshotPerKwh(charger.getTariffPerKwh() != null ? charger.getTariffPerKwh() : BigDecimal.valueOf(18.5));
+            s.setEnergyKwh(BigDecimal.ZERO);
+            s.setCurrentPowerKw(charger.getMaxPowerKw() != null ? charger.getMaxPowerKw() : BigDecimal.valueOf(120.0));
+            s.setEstimatedCost(BigDecimal.ZERO);
+            s.setDurationSeconds(0L);
+            s.setStartedAt(OffsetDateTime.now());
+            sessionRepository.save(s);
+        }
+
+        // Start simulator and update status
+        simulatorService.startCharging(charger.getId(), sessionUid, charger.getMaxPowerKw().doubleValue());
+        eventRepository.logEvent(id, "ADMIN_TURN_ON", "Admin turned charger ON (Simulator active for " + sessionUid + ")");
+        realtimeUpdateService.publishChargerStatus(id, charger.getIdentifier(), "CHARGING");
+
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Charger turned ON successfully",
+                "chargerId", id,
+                "sessionUid", sessionUid,
+                "status", "CHARGING"
+        ));
+    }
+
+    @PostMapping("/simulator/chargers/{id}/turn-off")
+    public ResponseEntity<Map<String, Object>> turnOffCharger(@PathVariable Long id) {
+        Charger charger = chargerRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Charger not found with ID: " + id));
+
+        // Safely complete any active session
+        Optional<ChargingSession> activeSessionOpt = sessionRepository.findActiveSessionByChargerId(id);
+        if (activeSessionOpt.isPresent()) {
+            ChargingSession s = activeSessionOpt.get();
+            sessionService.stopSession(s.getUserId(), s.getId(), "STOPPED_BY_ADMIN");
+        } else {
+            simulatorService.stopCharging(id, "ALL");
+            chargerRepository.updateStatus(id, "AVAILABLE");
+            realtimeUpdateService.publishChargerStatus(id, charger.getIdentifier(), "AVAILABLE");
+        }
+
+        eventRepository.logEvent(id, "ADMIN_TURN_OFF", "Admin turned charger OFF (Simulator stopped safely)");
+
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Charger turned OFF successfully",
+                "chargerId", id,
+                "status", "AVAILABLE"
+        ));
     }
 
     @GetMapping("/simulator/events")

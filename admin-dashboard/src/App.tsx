@@ -25,10 +25,12 @@ import { NotificationsView } from './views/NotificationsView';
 import { ReportsView } from './views/ReportsView';
 import { AuditLogsView } from './views/AuditLogsView';
 import { SettingsView } from './views/SettingsView';
+import { ChargerQrModal } from './components/ChargerQrModal';
 
 export default function App() {
   const [token, setToken] = useState<string | null>(localStorage.getItem('hc_admin_token'));
   const [activeTab, setActiveTab] = useState<string>('dashboard');
+  const [selectedQrCharger, setSelectedQrCharger] = useState<Charger | null>(null);
   
   // Login form state
   const [email, setEmail] = useState('admin@haltcharge.com');
@@ -196,6 +198,22 @@ export default function App() {
     } catch (err: any) { alert(err.message); }
   };
 
+  const handleTurnOnCharger = async (id: number) => {
+    try {
+      const res = await apiRequest<{ message: string }>(`/api/admin/simulator/chargers/${id}/turn-on`, { method: 'POST' });
+      alert(res.message || 'Charger turned ON successfully');
+      fetchData();
+    } catch (err: any) { alert(err.message || 'Failed to turn charger ON'); }
+  };
+
+  const handleTurnOffCharger = async (id: number) => {
+    try {
+      const res = await apiRequest<{ message: string }>(`/api/admin/simulator/chargers/${id}/turn-off`, { method: 'POST' });
+      alert(res.message || 'Charger turned OFF successfully');
+      fetchData();
+    } catch (err: any) { alert(err.message || 'Failed to turn charger OFF'); }
+  };
+
   // Add Station action
   const handleCreateStation = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -209,7 +227,7 @@ export default function App() {
     } catch (err: any) { alert(err.message || 'Failed to create station'); }
   };
 
-  // Add Charger action
+  // Add Charger action - Automatically generates and previews unique QR code
   const handleCreateCharger = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -224,11 +242,13 @@ export default function App() {
         return;
       }
 
-      await apiRequest('/api/admin/chargers', {
+      const created = await apiRequest<Charger>('/api/admin/chargers', {
         method: 'POST',
         body: JSON.stringify({ ...newCharger, stationId: targetStationId })
       });
       setShowAddCharger(false);
+      // Automatically preview generated QR Code!
+      setSelectedQrCharger(created);
       fetchData();
     } catch (err: any) { alert(err.message || 'Failed to create charger'); }
   };
@@ -442,8 +462,11 @@ export default function App() {
         {activeTab === 'chargers' && (
           <ChargersView
             chargers={chargers}
+            stations={stations}
+            sessions={sessions}
             onOpenAddCharger={openAddCharger}
             onRefresh={fetchData}
+            onOpenQrModal={c => setSelectedQrCharger(c)}
           />
         )}
 
@@ -451,9 +474,13 @@ export default function App() {
           <SimulatorView
             chargers={chargers}
             events={events}
+            sessions={sessions}
             onTriggerFault={triggerSimulatorFault}
             onTriggerOffline={triggerSimulatorOffline}
             onTriggerRestore={triggerSimulatorRestore}
+            onTurnOn={handleTurnOnCharger}
+            onTurnOff={handleTurnOffCharger}
+            onOpenQrModal={c => setSelectedQrCharger(c)}
           />
         )}
 
@@ -811,6 +838,14 @@ export default function App() {
               </form>
             </div>
           </div>
+        )}
+        {/* Modal: Charger QR Placard */}
+        {selectedQrCharger && (
+          <ChargerQrModal
+            charger={selectedQrCharger}
+            station={stations.find(s => s.id === selectedQrCharger.stationId)}
+            onClose={() => setSelectedQrCharger(null)}
+          />
         )}
       </main>
     </div>

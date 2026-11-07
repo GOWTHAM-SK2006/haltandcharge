@@ -85,7 +85,18 @@ public class SimulatorChargerService implements ChargerCommunicationService {
 
     @Override
     public void stopCharging(Long chargerId, String sessionUid) {
-        SimState state = activeSimulations.remove(sessionUid);
+        SimState state = null;
+        if ("ALL".equalsIgnoreCase(sessionUid)) {
+            for (Map.Entry<String, SimState> entry : activeSimulations.entrySet()) {
+                if (chargerId.equals(entry.getValue().chargerId)) {
+                    state = entry.getValue();
+                    activeSimulations.remove(entry.getKey());
+                    break;
+                }
+            }
+        } else {
+            state = activeSimulations.remove(sessionUid);
+        }
         chargerRepository.updateStatus(chargerId, "AVAILABLE");
         eventRepository.logEvent(chargerId, "STOP_CHARGING", "Simulated session stopped: " + sessionUid + 
                 (state != null ? " with final energy: " + String.format("%.3f", state.accumulatedKwh) + " kWh" : ""));

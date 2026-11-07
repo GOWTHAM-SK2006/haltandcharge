@@ -1,22 +1,30 @@
 import React from 'react';
-import { Charger, SimulatorEvent } from '../types';
+import { Charger, SimulatorEvent, ChargingSession } from '../types';
 import { DataTable, Column } from '../components/DataTable';
-import { Sliders, AlertTriangle, PowerOff, CheckCircle2, Zap } from 'lucide-react';
+import { Sliders, AlertTriangle, PowerOff, CheckCircle2, Zap, Power, Square, QrCode } from 'lucide-react';
 
 interface SimulatorViewProps {
   chargers: Charger[];
   events: SimulatorEvent[];
+  sessions: ChargingSession[];
   onTriggerFault: (id: number) => void;
   onTriggerOffline: (id: number) => void;
   onTriggerRestore: (id: number) => void;
+  onTurnOn: (id: number) => void;
+  onTurnOff: (id: number) => void;
+  onOpenQrModal: (charger: Charger) => void;
 }
 
 export const SimulatorView: React.FC<SimulatorViewProps> = ({
   chargers,
   events,
+  sessions,
   onTriggerFault,
   onTriggerOffline,
-  onTriggerRestore
+  onTriggerRestore,
+  onTurnOn,
+  onTurnOff,
+  onOpenQrModal
 }) => {
   const eventColumns: Column<SimulatorEvent>[] = [
     {
@@ -32,7 +40,7 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({
       render: ev => {
         const isFault = ev.event_type.includes('FAULT');
         const isOffline = ev.event_type.includes('OFFLINE');
-        const isRestore = ev.event_type.includes('RESTORE') || ev.event_type.includes('START');
+        const isRestore = ev.event_type.includes('RESTORE') || ev.event_type.includes('START') || ev.event_type.includes('ON');
         return (
           <span style={{
             fontWeight: 700,
@@ -108,9 +116,9 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({
             </span>
           </div>
           <p style={{ fontSize: '13px', color: '#047857', lineHeight: '1.5' }}>
-            Since physical charging stations are initially simulated, this engine reproduces continuous
-            hardware telemetry, dynamic SOC curves, power dispatch, ground fault simulations and automatic billing deductions.
-            All telemetry is tagged <code style={{ background: '#d1fae5', color: '#065f46' }}>[SIMULATED]</code> in the database.
+            Software-only Virtual Charger Simulator reproduced with continuous 2-second telemetry ticks,
+            realistic power curves, ground fault injection, and QR dispenser verification.
+            All readings are labeled <code style={{ background: '#d1fae5', color: '#065f46' }}>[SIMULATED]</code> in database records.
           </p>
         </div>
       </div>
@@ -118,132 +126,249 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({
       {/* Simulator Controls Grid */}
       <div>
         <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', marginBottom: '14px' }}>
-          Hardware Interactive Testing Rack
+          Hardware Interactive Testing Rack & Charger ON/OFF
         </h3>
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
           gap: '18px'
         }}>
-          {chargers.map(c => (
-            <div key={c.id} style={{
-              background: '#ffffff',
-              border: '1px solid #e2e8f0',
-              borderRadius: '14px',
-              padding: '20px',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between'
-            }}>
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
-                  <div>
-                    <div style={{ fontWeight: 800, fontSize: '15px', color: '#0f172a', fontFamily: 'monospace' }}>
-                      {c.identifier}
+          {chargers.map(c => {
+            const isCharging = c.status === 'CHARGING';
+            const activeSession = sessions.find(s => s.chargerId === c.id && s.status === 'IN_PROGRESS');
+
+            return (
+              <div key={c.id} style={{
+                background: '#ffffff',
+                border: isCharging ? '2px solid #a7f3d0' : '1px solid #e2e8f0',
+                borderRadius: '14px',
+                padding: '20px',
+                boxShadow: isCharging ? '0 4px 14px rgba(16, 185, 129, 0.15)' : '0 1px 3px rgba(0,0,0,0.04)',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between'
+              }}>
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+                    <div>
+                      <div style={{ fontWeight: 800, fontSize: '15px', color: '#0f172a', fontFamily: 'monospace' }}>
+                        {c.identifier}
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#64748b' }}>{c.name}</div>
                     </div>
-                    <div style={{ fontSize: '12px', color: '#64748b' }}>{c.name}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <button
+                        onClick={() => onOpenQrModal(c)}
+                        title="View Station QR Placard"
+                        style={{
+                          padding: '3px 6px',
+                          borderRadius: '6px',
+                          background: '#f8fafc',
+                          border: '1px solid #cbd5e1',
+                          color: '#059669',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '3px',
+                          fontSize: '11px',
+                          fontWeight: 600
+                        }}
+                      >
+                        <QrCode size={13} />
+                        <span>QR</span>
+                      </button>
+                      <span style={{
+                        padding: '3px 8px',
+                        borderRadius: '6px',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        background: c.status === 'AVAILABLE' ? '#ecfdf5' :
+                                    c.status === 'CHARGING' ? '#f0fdf4' :
+                                    c.status === 'FAULTED' ? '#fef2f2' : '#f1f5f9',
+                        color: c.status === 'AVAILABLE' ? '#059669' :
+                               c.status === 'CHARGING' ? '#16a34a' :
+                               c.status === 'FAULTED' ? '#dc2626' : '#475569',
+                        border: c.status === 'AVAILABLE' ? '1px solid #a7f3d0' :
+                                c.status === 'CHARGING' ? '1px solid #bbf7d0' :
+                                c.status === 'FAULTED' ? '1px solid #fecaca' : '1px solid #cbd5e1'
+                      }}>
+                        {c.status}
+                      </span>
+                    </div>
                   </div>
-                  <span style={{
-                    padding: '3px 8px',
-                    borderRadius: '6px',
-                    fontSize: '11px',
-                    fontWeight: 700,
-                    background: c.status === 'AVAILABLE' ? '#ecfdf5' :
-                                c.status === 'CHARGING' ? '#f0fdf4' :
-                                c.status === 'FAULTED' ? '#fef2f2' : '#f1f5f9',
-                    color: c.status === 'AVAILABLE' ? '#059669' :
-                           c.status === 'CHARGING' ? '#16a34a' :
-                           c.status === 'FAULTED' ? '#dc2626' : '#475569',
-                    border: c.status === 'AVAILABLE' ? '1px solid #a7f3d0' :
-                            c.status === 'CHARGING' ? '1px solid #bbf7d0' :
-                            c.status === 'FAULTED' ? '1px solid #fecaca' : '1px solid #cbd5e1'
-                  }}>
-                    {c.status}
-                  </span>
+
+                  <div style={{ fontSize: '12px', color: '#475569', background: '#f8fafc', padding: '8px 12px', borderRadius: '8px', marginBottom: '12px', border: '1px solid #f1f5f9' }}>
+                    Speed: <strong>{c.maxPowerKw} kW ({c.chargerType})</strong> • Tariff: <strong>₹{c.tariffPerKwh}/kWh</strong>
+                  </div>
+
+                  {/* Connected Customer & Live Metrics */}
+                  {activeSession ? (
+                    <div style={{
+                      background: '#ecfdf5',
+                      border: '1px solid #a7f3d0',
+                      borderRadius: '8px',
+                      padding: '10px 12px',
+                      marginBottom: '14px'
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                        <span style={{ fontSize: '11px', fontWeight: 700, color: '#065f46' }}>
+                          CONNECTED CUSTOMER:
+                        </span>
+                        <span style={{ fontSize: '10px', background: '#d1fae5', color: '#047857', padding: '1px 5px', borderRadius: '4px', fontWeight: 700 }}>
+                          SIMULATED
+                        </span>
+                      </div>
+                      <div style={{ fontWeight: 700, fontSize: '12px', color: '#0f172a' }}>
+                        {activeSession.userEmail || `User #${activeSession.userId}`}
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#047857', fontFamily: 'monospace', marginTop: '2px' }}>
+                        {activeSession.sessionUid}
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginTop: '6px', fontSize: '11px' }}>
+                        <div>Energy: <strong>{activeSession.energyKwh?.toFixed(2) || '0.00'} kWh</strong></div>
+                        <div>Power: <strong>{activeSession.currentPowerKw?.toFixed(1) || '0.0'} kW</strong></div>
+                        <div>Cost: <strong>₹{activeSession.estimatedCost?.toFixed(2) || '0.00'}</strong></div>
+                        <div>Duration: <strong>{Math.floor((activeSession.durationSeconds || 0) / 60)}m {((activeSession.durationSeconds || 0) % 60)}s</strong></div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: '11px', color: '#94a3b8', fontStyle: 'italic', marginBottom: '14px', padding: '6px 10px', background: '#f8fafc', borderRadius: '6px' }}>
+                      No active customer session. Charger is currently idle.
+                    </div>
+                  )}
                 </div>
 
-                <div style={{ fontSize: '12px', color: '#475569', background: '#f8fafc', padding: '8px 12px', borderRadius: '8px', marginBottom: '16px', border: '1px solid #f1f5f9' }}>
-                  Speed: <strong>{c.maxPowerKw} kW ({c.chargerType})</strong> • Tariff: <strong>₹{c.tariffPerKwh}/kWh</strong>
+                {/* Simulator Action Controls */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {/* Primary ON / OFF Buttons */}
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      onClick={() => onTurnOn(c.id)}
+                      disabled={isCharging}
+                      style={{
+                        flex: 1,
+                        padding: '8px 12px',
+                        background: isCharging ? '#f1f5f9' : '#10b981',
+                        border: 'none',
+                        borderRadius: '8px',
+                        color: isCharging ? '#94a3b8' : '#ffffff',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        cursor: isCharging ? 'not-allowed' : 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
+                        boxShadow: isCharging ? 'none' : '0 2px 6px rgba(16, 185, 129, 0.3)'
+                      }}
+                    >
+                      <Power size={14} />
+                      <span>TURN ON</span>
+                    </button>
+
+                    <button
+                      onClick={() => onTurnOff(c.id)}
+                      disabled={!isCharging}
+                      style={{
+                        flex: 1,
+                        padding: '8px 12px',
+                        background: !isCharging ? '#f1f5f9' : '#ef4444',
+                        border: 'none',
+                        borderRadius: '8px',
+                        color: !isCharging ? '#94a3b8' : '#ffffff',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        cursor: !isCharging ? 'not-allowed' : 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
+                        boxShadow: !isCharging ? 'none' : '0 2px 6px rgba(239, 68, 68, 0.3)'
+                      }}
+                    >
+                      <Square size={14} />
+                      <span>TURN OFF</span>
+                    </button>
+                  </div>
+
+                  {/* Fault / Offline / Restore Testing Controls */}
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    <button
+                      onClick={() => onTriggerFault(c.id)}
+                      disabled={c.status === 'FAULTED'}
+                      style={{
+                        flex: 1,
+                        padding: '6px 8px',
+                        background: '#fef2f2',
+                        border: '1px solid #fca5a5',
+                        borderRadius: '6px',
+                        color: '#dc2626',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        cursor: c.status === 'FAULTED' ? 'not-allowed' : 'pointer',
+                        opacity: c.status === 'FAULTED' ? 0.5 : 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '4px'
+                      }}
+                    >
+                      <AlertTriangle size={12} />
+                      Fault
+                    </button>
+
+                    <button
+                      onClick={() => onTriggerOffline(c.id)}
+                      disabled={c.status === 'OFFLINE'}
+                      style={{
+                        flex: 1,
+                        padding: '6px 8px',
+                        background: '#f1f5f9',
+                        border: '1px solid #cbd5e1',
+                        borderRadius: '6px',
+                        color: '#475569',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        cursor: c.status === 'OFFLINE' ? 'not-allowed' : 'pointer',
+                        opacity: c.status === 'OFFLINE' ? 0.5 : 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '4px'
+                      }}
+                    >
+                      <PowerOff size={12} />
+                      Offline
+                    </button>
+
+                    <button
+                      onClick={() => onTriggerRestore(c.id)}
+                      disabled={c.status === 'AVAILABLE'}
+                      style={{
+                        flex: 1.2,
+                        padding: '6px 8px',
+                        background: '#ecfdf5',
+                        border: '1px solid #a7f3d0',
+                        borderRadius: '6px',
+                        color: '#059669',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        cursor: c.status === 'AVAILABLE' ? 'not-allowed' : 'pointer',
+                        opacity: c.status === 'AVAILABLE' ? 0.5 : 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '4px'
+                      }}
+                    >
+                      <CheckCircle2 size={12} />
+                      Restore
+                    </button>
+                  </div>
                 </div>
               </div>
-
-              {/* Action Buttons */}
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                <button
-                  onClick={() => onTriggerFault(c.id)}
-                  disabled={c.status === 'FAULTED'}
-                  style={{
-                    flex: 1,
-                    padding: '7px 10px',
-                    background: '#fef2f2',
-                    border: '1px solid #fca5a5',
-                    borderRadius: '7px',
-                    color: '#dc2626',
-                    fontSize: '12px',
-                    fontWeight: 700,
-                    cursor: c.status === 'FAULTED' ? 'not-allowed' : 'pointer',
-                    opacity: c.status === 'FAULTED' ? 0.5 : 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '4px'
-                  }}
-                >
-                  <AlertTriangle size={13} />
-                  Fault
-                </button>
-
-                <button
-                  onClick={() => onTriggerOffline(c.id)}
-                  disabled={c.status === 'OFFLINE'}
-                  style={{
-                    flex: 1,
-                    padding: '7px 10px',
-                    background: '#f1f5f9',
-                    border: '1px solid #cbd5e1',
-                    borderRadius: '7px',
-                    color: '#475569',
-                    fontSize: '12px',
-                    fontWeight: 700,
-                    cursor: c.status === 'OFFLINE' ? 'not-allowed' : 'pointer',
-                    opacity: c.status === 'OFFLINE' ? 0.5 : 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '4px'
-                  }}
-                >
-                  <PowerOff size={13} />
-                  Offline
-                </button>
-
-                <button
-                  onClick={() => onTriggerRestore(c.id)}
-                  disabled={c.status === 'AVAILABLE'}
-                  style={{
-                    flex: 1.2,
-                    padding: '7px 10px',
-                    background: '#ecfdf5',
-                    border: '1px solid #a7f3d0',
-                    borderRadius: '7px',
-                    color: '#059669',
-                    fontSize: '12px',
-                    fontWeight: 700,
-                    cursor: c.status === 'AVAILABLE' ? 'not-allowed' : 'pointer',
-                    opacity: c.status === 'AVAILABLE' ? 0.5 : 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '4px'
-                  }}
-                >
-                  <CheckCircle2 size={13} />
-                  Restore
-                </button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -269,4 +394,3 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({
     </div>
   );
 };
-
